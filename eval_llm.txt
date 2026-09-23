@@ -1,36 +1,60 @@
-구간                                           정답         규칙만        규칙+단순      규칙+LLM    
-sample.jsonl node-1 10:02:00–10:03:20        observed   O observed O observed O observed
-                                             └ 합성: 업무 이벤트 없이 healthcheck만 도는 조용한 구간
-sample.jsonl node-1 10:05:00–10:05:40        unobserved O unobserved O unobserved O unobserved
-                                             └ 합성: 이벤트 없음 + Falco 드롭 알림
-sample.jsonl node-1 10:07:30–10:08:10        unobserved - undecided O unobserved O unobserved
-                                             └ 합성: 드롭 신호 없는 전체 블랙아웃
-sample.jsonl node-1 10:09:00–10:09:30        unobserved - undecided O unobserved X observed
-                                             └ 합성: 업무 이벤트는 있는데 healthcheck만 사라진 부분 유실
-falco_quiet.jsonl 0e51ef4cb9e3 08:27:40–08:28:30 observed   O observed O observed O observed
-                                             └ Falco: 워크로드를 멈춘 조용한 1분
-falco_storm.jsonl dc731196ee92 08:42:40–08:43:30 observed   O observed O observed O observed
-                                             └ Falco: exec/open 폭주 1분, 드롭 0
-falco_outage.jsonl node-a 09:17:20–09:17:50  observed   O observed O observed O observed
-                                             └ Falco: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨
-falco_outage.jsonl node-a 09:18:40–09:19:10  unobserved O unobserved O unobserved O unobserved
-                                             └ Falco: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
-falco_outage.jsonl node-b 09:18:40–09:19:10  observed   O observed O observed O observed
-                                             └ Falco: 같은 시각 대조군 노드, 계속 정상
-tetragon.jsonl tg-node 09:20:10–09:20:20     observed   - undecided X unobserved O observed
-                                             └ Tetragon: 막 켜졌고 워크로드 시작 전
-tetragon.jsonl tg-node 09:21:10–09:21:40     observed   - undecided X unobserved O observed
-                                             └ Tetragon: 워크로드를 멈춘 조용한 40초
-tetragon.jsonl tg-node 09:22:30–09:23:00     unobserved - undecided O unobserved X observed
-                                             └ Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
-tetragon_hb.jsonl tg-node 09:46:00–09:46:30  observed   O observed O observed O observed
-                                             └ Tetragon+하트비트: 워크로드를 멈춘 조용한 40초
-tetragon_hb.jsonl tg-node 09:47:20–09:47:50  observed   O observed O observed O observed
-                                             └ Tetragon+하트비트: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨
-tetragon_hb.jsonl tg-node 09:48:40–09:49:10  unobserved O unobserved O unobserved O unobserved
-                                             └ Tetragon+하트비트: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
+LLM: openai gpt-5.5, 구간마다 1번 질문
+
+구간                                             정답         규칙만          규칙+단순        규칙+LLM      
+sample.jsonl node-1 10:02:00–10:03:20          observed   O observed   O observed   O observed  
+                                               └ 합성: 업무 이벤트 없이 healthcheck만 도는 조용한 구간
+sample.jsonl node-1 10:05:00–10:05:40          unobserved O unobserved O unobserved O unobserved
+                                               └ 합성: 이벤트 없음 + 드롭 보고(rate_limit_info)
+sample.jsonl node-1 10:07:30–10:08:10          unobserved - undecided  O unobserved O unobserved
+                                               └ 합성: 드롭 신호 없는 전체 블랙아웃
+sample.jsonl node-1 10:09:00–10:09:30          unobserved - undecided  O unobserved X observed  
+                                               └ 합성: 업무 이벤트는 있는데 healthcheck만 사라진 부분 유실
+falco_quiet.jsonl 0e51ef4cb9e3 08:27:40–08:28:30 observed   O observed   O observed   O observed  
+                                               └ Falco: 워크로드를 멈춘 조용한 1분
+falco_storm.jsonl dc731196ee92 08:42:40–08:43:30 observed   O observed   O observed   O observed  
+                                               └ Falco: exec/open 폭주 1분, 드롭 0
+falco_outage.jsonl node-a 09:17:20–09:17:50    observed   O observed   O observed   O observed  
+                                               └ Falco: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨
+falco_outage.jsonl node-a 09:18:40–09:19:10    unobserved O unobserved O unobserved O unobserved
+                                               └ Falco: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
+falco_outage.jsonl node-b 09:18:40–09:19:10    observed   O observed   O observed   O observed  
+                                               └ Falco: 같은 시각 대조군 노드, 계속 정상
+tetragon.jsonl tg-node 09:20:10–09:20:20       observed   - undecided  X unobserved O observed  
+                                               └ Tetragon: 막 켜졌고 워크로드 시작 전
+tetragon.jsonl tg-node 09:21:10–09:21:40       observed   - undecided  X unobserved O observed  
+                                               └ Tetragon: 워크로드를 멈춘 조용한 40초
+tetragon.jsonl tg-node 09:22:30–09:23:00       unobserved - undecided  O unobserved O unobserved
+                                               └ Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
+tetragon_hb.jsonl tg-node 09:46:00–09:46:30    observed   O observed   O observed   O observed  
+                                               └ Tetragon+하트비트: 워크로드를 멈춘 조용한 40초
+tetragon_hb.jsonl tg-node 09:47:20–09:47:50    observed   O observed   O observed   O observed  
+                                               └ Tetragon+하트비트: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨
+tetragon_hb.jsonl tg-node 09:48:40–09:49:10    unobserved O unobserved O unobserved O unobserved
+                                               └ Tetragon+하트비트: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
+cross.jsonl lab/falco 09:58:00–09:58:40        unobserved O unobserved O unobserved O unobserved
+                                               └ 교차: Falco CPU 5% 제한 + exec 폭주, 실제 드롭 수십만 건
+cross.jsonl lab/falco 09:59:30–09:59:50        observed   O observed   O observed   O observed  
+                                               └ 교차: 워크로드를 멈춘 조용한 구간 (Falco 하트비트 정상)
+cross.jsonl lab/tetragon 09:57:20–09:57:50     unobserved O unobserved O unobserved O unobserved
+                                               └ 교차: 저장된 로그에 Tetragon 이벤트 없음 (로그 회전으로 지워졌을 가능성), Falco는 워크로드를 봄
+cross.jsonl lab/tetragon 09:59:30–09:59:50     observed   O observed   O observed   O observed  
+                                               └ 교차: 워크로드를 멈춘 조용한 구간, 하트비트 없는 Tetragon
+cross.jsonl lab/tetragon 10:00:50–10:01:10     unobserved O unobserved O unobserved O unobserved
+                                               └ 교차: Tetragon 컨테이너 삭제, Falco는 같은 시각 워크로드를 봄
+k8s.jsonl gap-worker/falco 10:07:05–10:07:25   unobserved O unobserved O unobserved O unobserved
+                                               └ k8s: gap-worker의 Falco 파드 삭제, DaemonSet이 다시 띄우기까지 약 25초
+k8s.jsonl gap-worker/tetragon 10:07:05–10:07:25 observed   O observed   O observed   O observed  
+                                               └ k8s: 같은 시각 같은 노드의 Tetragon은 계속 정상
+k8s.jsonl gap-worker2/tetragon 10:08:25–10:08:30 unobserved O unobserved O unobserved O unobserved
+                                               └ k8s: gap-worker2의 Tetragon 파드 삭제, 약 6초 만에 다시 뜸
+k8s.jsonl gap-worker2/falco 10:08:25–10:08:30  observed   O observed   O observed   O observed  
+                                               └ k8s: 같은 시각 같은 노드의 Falco는 계속 정상
+k8s.jsonl gap-worker/tetragon 10:10:20–10:10:25 observed   O observed   O observed   O observed  
+                                               └ k8s: 워크로드 삭제 후 새로 뜨기 전 약 13초의 조용한 구간
+k8s.jsonl gap-worker2/tetragon 10:10:20–10:10:25 observed   O observed   O observed   O observed  
+                                               └ k8s: 워크로드 삭제 후 새로 뜨기 전 약 13초의 조용한 구간
 
 정답 수 (O 정답 / X 오답 / - 보류)
-  규칙만      10/15  (오답 0, 보류 5)
-  규칙+단순    13/15  (오답 2, 보류 0)
-  규칙+LLM   13/15  (오답 2, 보류 0)
+  규칙만      21/26  (오답 0, 보류 5)
+  규칙+단순    24/26  (오답 2, 보류 0)
+  규칙+LLM   25/26  (오답 1, 보류 0)
