@@ -38,7 +38,7 @@
   {"file": "real/cross.jsonl", "host": "lab", "collector": "falco", "start": "09:59:30", "end": "09:59:50", "truth": "observed",
    "note": "교차: 워크로드를 멈춘 조용한 구간 (Falco 하트비트 정상)"},
   {"file": "real/cross.jsonl", "host": "lab", "collector": "tetragon", "start": "09:57:20", "end": "09:57:50", "truth": "unobserved",
-   "note": "교차: Tetragon이 아직 준비 중 (첫 이벤트 09:58:14), Falco는 워크로드를 봄"},
+   "note": "교차: 저장된 로그에 Tetragon 이벤트 없음 (로그 회전으로 지워졌을 가능성), Falco는 워크로드를 봄"},
   {"file": "real/cross.jsonl", "host": "lab", "collector": "tetragon", "start": "09:59:30", "end": "09:59:50", "truth": "observed",
    "note": "교차: 워크로드를 멈춘 조용한 구간, 하트비트 없는 Tetragon"},
   {"file": "real/cross.jsonl", "host": "lab", "collector": "tetragon", "start": "10:00:50", "end": "10:01:10", "truth": "unobserved",
