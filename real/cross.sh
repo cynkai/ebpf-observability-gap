@@ -35,7 +35,7 @@ storm() {
 }
 
 docker rm -f falco tetragon wl st1 st2 st3 st4 >/dev/null 2>&1 || true
-rm -f .cross_falco.jsonl .cross_tetragon.jsonl
+rm -f .cross_falco.jsonl .cross_tetragon*.jsonl
 start_falco; start_tetragon; sleep 10
 
 log "phase normal";   start_wl;                                sleep 40
@@ -49,9 +49,13 @@ docker rm -f falco tetragon wl >/dev/null
 
 python3 -c "
 import json
-rows = [l for f in ('.cross_falco.jsonl', '.cross_tetragon.jsonl') for l in open(f) if l.strip()]
+import glob
+# Tetragon은 내보내기 파일이 10MB를 넘으면 .cross_tetragon-<시각>.jsonl로 돌리고 5개만 남긴다(나머지는 지움).
+# 돌린 파일까지 함께 읽어야 남은 이벤트를 모두 얻는다.
+files = ['.cross_falco.jsonl'] + sorted(glob.glob('.cross_tetragon*.jsonl'))
+rows = [l for f in files for l in open(f) if l.strip()]
 rows.sort(key=lambda l: json.loads(l)['time'])
 open('cross.jsonl', 'w').writelines(rows)
 "
-rm -f .cross_falco.jsonl .cross_tetragon.jsonl
+rm -f .cross_falco.jsonl .cross_tetragon*.jsonl
 log "done"
