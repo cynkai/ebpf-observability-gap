@@ -38,9 +38,12 @@ def main():
     model = args.model or g.DEFAULT_MODEL[args.provider]
 
     cases = json.load(open(args.cases))
+    for c in cases:  # "file"은 파일 하나 또는 함께 분석할 파일 목록
+        c["files"] = c["file"] if isinstance(c["file"], list) else [c["file"]]
+        c["file"] = " + ".join(c["files"])
     reports, verdicts = {}, {}
-    for path in sorted({c["file"] for c in cases}):
-        reports[path] = {r.host: r for r in g.analyze(g.load(path), args.window, 0.7)}
+    for path, files in sorted({c["file"]: c["files"] for c in cases}.items()):
+        reports[path] = {r.host: r for r in g.analyze(g.load(files), args.window, 0.7)}
         if args.llm:  # 파일·호스트마다 한 번씩만 묻는다
             for r in reports[path].values():
                 verdicts.update({(path,) + k: v for k, v in
@@ -77,7 +80,7 @@ def main():
             wrong[k] += got[k] not in (c["truth"], "undecided")
         mark = lambda k: ("- " if got[k] == "undecided" else  # noqa: E731
                           "O " if got[k] == c["truth"] else "X ") + got[k]
-        label = f"{c['file'].split('/')[-1]} {c['host']} {c['start']}–{c['end']}"
+        label = f"{c['files'][0].split('/')[-1]} {c['host']} {c['start']}–{c['end']}"
         print(f"{label:44} {c['truth']:10} " + " ".join(f"{mark(k):10}" for k in cols))
         print(f"{'':44} └ {c['note']}")
 

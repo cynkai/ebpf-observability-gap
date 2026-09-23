@@ -19,12 +19,18 @@ falco_outage.jsonl node-b 09:18:40–09:19:10  observed   O observed O observed 
                                              └ Falco: 같은 시각 대조군 노드, 계속 정상
 tetragon.jsonl tg-node 09:20:10–09:20:20     observed   - undecided X unobserved O observed
                                              └ Tetragon: 막 켜졌고 워크로드 시작 전
-tetragon.jsonl tg-node 09:21:10–09:21:40     observed   - undecided X unobserved X unobserved
+tetragon.jsonl tg-node 09:21:10–09:21:40     observed   - undecided X unobserved O observed
                                              └ Tetragon: 워크로드를 멈춘 조용한 40초
-tetragon.jsonl tg-node 09:22:30–09:23:00     unobserved - undecided O unobserved O unobserved
+tetragon.jsonl tg-node 09:22:30–09:23:00     unobserved - undecided O unobserved X observed
                                              └ Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
+tetragon_hb.jsonl tg-node 09:46:00–09:46:30  observed   O observed O observed O observed
+                                             └ Tetragon+하트비트: 워크로드를 멈춘 조용한 40초
+tetragon_hb.jsonl tg-node 09:47:20–09:47:50  observed   O observed O observed O observed
+                                             └ Tetragon+하트비트: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨
+tetragon_hb.jsonl tg-node 09:48:40–09:49:10  unobserved O unobserved O unobserved O unobserved
+                                             └ Tetragon+하트비트: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
 
 정답 수 (O 정답 / X 오답 / - 보류)
-  규칙만      7/12  (오답 0, 보류 5)
-  규칙+단순    10/12  (오답 2, 보류 0)
-  규칙+LLM   10/12  (오답 2, 보류 0)
+  규칙만      10/15  (오답 0, 보류 5)
+  규칙+단순    13/15  (오답 2, 보류 0)
+  규칙+LLM   13/15  (오답 2, 보류 0)

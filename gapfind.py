@@ -13,6 +13,7 @@
   python3 gapfind.py sample.jsonl --llm              # SUSP 구간을 LLM에게 판단 (기본 OpenAI)
   python3 gapfind.py sample.jsonl --html report.html # HTML 타임라인
   python3 gapfind.py falco.jsonl --follow            # 실시간 감시 (tail -f 처럼)
+  python3 gapfind.py tetragon.jsonl heartbeat.jsonl  # 여러 파일을 합쳐서 (Tetragon + 하트비트)
 """
 import argparse
 import html
@@ -27,7 +28,8 @@ SYMBOL = {"OBS": "█", "QUIET": "·", "DELAYED": "~", "LOST": "X", "SUSP": "?"}
 LABEL = {"OBS": "관측", "QUIET": "조용", "DELAYED": "지연", "LOST": "유실(확정)", "SUSP": "유실(추정)"}
 FALCO_DROP_RULE = "Falco internal: syscall event drop"
 FALCO_METRICS_RULE = "Falco internal: metrics snapshot"  # metrics.output_rule=true 일 때
-HEARTBEAT = "falco-metrics"
+# 수집기가 직접 내는 하트비트. Tetragon 것은 tetragon_heartbeat.py가 만든다
+HEARTBEATS = ("falco-metrics", "tetragon-metrics")
 
 
 # ---------- 1. 파싱: Falco / Tetragon 줄을 같은 모양으로 ----------
@@ -38,7 +40,7 @@ class Event:
     host: str
     proc: str           # 빈 문자열이면 활동이 아니라 드롭 알림일 뿐
     drops: int = 0      # 0보다 크면 드롭 신호
-    meta: dict = None   # Falco metrics 스냅숏의 카운터 (start_ts, n_evts)
+    meta: dict = None   # 하트비트의 카운터 (start_ts, n_evts, 있으면 lost)
 
 
 def parse_ts(s):
@@ -60,9 +62,14 @@ def parse_line(d):
             # 주기적으로 나오므로 하트비트가 되고, 직전 스냅숏 이후 드롭 수도 알려준다
             n = int(fields.get("scap.n_drops", 0)) - int(fields.get("scap.n_drops_prev", 0))
             meta = {"start_ts": fields.get("falco.start_ts"), "n_evts": fields.get("scap.n_evts", 0)}
-            return Event(ts, host, HEARTBEAT, max(n, 0), meta)
+            return Event(ts, host, "falco-metrics", max(n, 0), meta)
         return Event(ts, host, fields.get("proc.name", "?"))
     host = d.get("node_name", "?")  # Tetragon
+    if "tetragon_heartbeat" in d:
+        # 유실 카운터는 누적값이라, 드롭 수는 analyze에서 앞 하트비트와 비교해 구한다
+        hb = d["tetragon_heartbeat"]
+        meta = {"start_ts": hb["start_ts"], "n_evts": hb["events_received"], "lost": hb["lost_total"]}
+        return Event(ts, host, "tetragon-metrics", 0, meta)
     if "rate_limit_info" in d:  # 내보내기 단계에서 버린 이벤트
         n = int(d["rate_limit_info"].get("number_of_dropped_process_events", 1))
         return Event(ts, host, "", n)
@@ -77,7 +84,14 @@ def parse_line(d):
     return None
 
 
-def load(path):
+def load(paths):
+    events = []
+    for path in [paths] if isinstance(paths, str) else paths:
+        events += load_one(path)
+    return sorted(events, key=lambda e: e.ts)
+
+
+def load_one(path):
     events = []
     with open(path) as f:
         for line in f:
@@ -90,7 +104,7 @@ def load(path):
                 continue  # --follow 중에 반쯤 쓰인 줄이 올 수 있다
             if ev:
                 events.append(ev)
-    return sorted(events, key=lambda e: e.ts)
+    return events
 
 
 # ---------- 2. 창 나누기 + 판정 ----------
@@ -135,8 +149,9 @@ def find_rhythm(events, size, ratio):
     for ev in events:
         if ev.proc:
             times.setdefault(ev.proc, []).append(ev.ts)
-    if HEARTBEAT in times:
-        return [HEARTBEAT]
+    beats = [h for h in HEARTBEATS if h in times]
+    if beats:
+        return beats
     rhythm = []
     for proc, ts in times.items():
         gaps = sorted(b - a for a, b in zip(ts, ts[1:]))
@@ -177,12 +192,12 @@ def classify(wins, rhythm):
 
 
 def explain_heartbeat_gaps(wins, events):
-    """Falco metrics 하트비트가 끊긴 구간을 앞뒤 스냅숏의 카운터로 확정한다.
+    """수집기 하트비트가 끊긴 구간을 앞뒤 스냅숏의 카운터로 확정한다.
 
     - start_ts가 바뀌거나 커널 카운터가 줄었다: 수집기가 재시작됨 -> 그 사이는 LOST
     - 카운터가 이어졌고 드롭이 0이다: 커널은 계속 쌓았고 나중에 처리됨 -> DELAYED
     """
-    beats = [e for e in events if e.proc == HEARTBEAT and e.meta]
+    beats = [e for e in events if e.proc in HEARTBEATS and e.meta]
     if len(beats) < 3:
         return
     gaps = sorted(b.ts - a.ts for a, b in zip(beats, beats[1:]))
@@ -192,7 +207,7 @@ def explain_heartbeat_gaps(wins, events):
             continue
         restarted = a.meta["start_ts"] != b.meta["start_ts"] or b.meta["n_evts"] < a.meta["n_evts"]
         if restarted:
-            state, reason = "LOST", "수집기 재시작 (falco.start_ts 변경)"
+            state, reason = "LOST", "수집기 재시작 (프로세스 시작 시각 변경)"
         elif b.drops:
             continue  # classify에서 이미 LOST로 처리됨
         else:
@@ -202,6 +217,17 @@ def explain_heartbeat_gaps(wins, events):
         for w in wins:
             if a.ts <= w.start < b.ts and w.state == "SUSP":
                 w.state, w.reason = state, reason
+
+
+def count_heartbeat_drops(events):
+    """누적 유실 카운터만 있는 하트비트(Tetragon)는 앞 하트비트와의 차이를 드롭으로 친다."""
+    prev = None
+    for e in events:
+        if not (e.meta and "lost" in e.meta):
+            continue
+        if prev and prev.meta["start_ts"] == e.meta["start_ts"]:
+            e.drops = max(0, e.meta["lost"] - prev.meta["lost"])
+        prev = e
 
 
 def segments(wins):
@@ -225,6 +251,7 @@ def analyze(events, size, ratio):
     reports = []
     for host in sorted(by_host):
         evs = by_host[host]
+        count_heartbeat_drops(evs)
         rhythm = find_rhythm(evs, size, ratio)
         wins = build_windows(evs, size, t0, t1)
         classify(wins, rhythm)
@@ -439,7 +466,7 @@ DEFAULT_MODEL = {"openai": "gpt-5.5", "anthropic": "claude-opus-5"}
 def follow(path, size, ratio, every):
     """파일을 주기적으로 다시 읽어, 새로 생긴 공백 구간을 한 번씩만 알린다."""
     seen = set()
-    print(f"{path} 감시 중 ({every}초마다 확인, Ctrl-C로 종료)", flush=True)
+    print(f"{' + '.join(path)} 감시 중 ({every}초마다 확인, Ctrl-C로 종료)", flush=True)
     while True:
         events = load(path)
         if events:
@@ -462,7 +489,7 @@ def follow(path, size, ratio, every):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("log", help="Falco/Tetragon JSON lines 파일")
+    ap.add_argument("log", nargs="+", help="Falco/Tetragon JSON lines 파일 (여러 개면 합쳐서 분석)")
     ap.add_argument("--window", type=int, default=10, help="창 크기(초), 기본 10")
     ap.add_argument("--rhythm-ratio", type=float, default=0.7,
                     help="간격이 이 비율 이상 일정한 프로세스를 주기 신호로 봄, 기본 0.7")
@@ -493,7 +520,7 @@ def main():
 
     print_report(reports, args.window, verdicts)
     if args.html:
-        render_html(reports, args.window, verdicts, args.html, args.log)
+        render_html(reports, args.window, verdicts, args.html, " + ".join(args.log))
         print(f"\nHTML: {args.html}")
 
 

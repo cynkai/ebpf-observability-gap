@@ -11,7 +11,7 @@ Falco / Tetragon 로그에서 **"아무 일도 없었던 구간"과 "관측되�
 | `OBS` █ | 관측됨 | 이벤트가 있고 주기 신호도 정상 |
 | `QUIET` · | 관측됨, 조용함 | 주기 신호는 살아 있고 다른 활동은 거의 없음 |
 | `DELAYED` ~ | 관측됨, 지연 | 하트비트는 끊겼지만 커널 카운터가 이어졌고 드롭 0 (나중에 처리됨) |
-| `LOST` X | 관측 안 됨 (확정) | 드롭 신호(Falco drop 알림, metrics의 `scap.n_drops`, Tetragon `rate_limit_info`), 또는 수집기 재시작(`falco.start_ts` 변경) |
+| `LOST` X | 관측 안 됨 (확정) | 드롭 신호(Falco drop 알림, 하트비트의 유실 카운터 증가, Tetragon `rate_limit_info`), 또는 수집기 재시작(프로세스 시작 시각 변경) |
 | `SUSP` ? | 관측 안 됨 (추정) | 증거 없이 주기 신호만 끊김 → `--llm`으로 판단 |
 
 ## 실행
@@ -20,7 +20,15 @@ Falco / Tetragon 로그에서 **"아무 일도 없었던 구간"과 "관측되�
 python3 gapfind.py sample.jsonl                     # 규칙 기반 판정 (호스트별)
 python3 gapfind.py sample.jsonl --html report.html  # HTML 타임라인 (칸에 마우스를 올리면 근거 표시)
 python3 gapfind.py falco.jsonl --follow             # 실시간 감시: 새 공백이 생기면 알림
-python3 eval.py                                     # 정답이 있는 12개 구간으로 정확도 측정
+python3 eval.py                                     # 정답이 있는 15개 구간으로 정확도 측정
+```
+
+Tetragon은 하트비트를 따로 모아 함께 넘깁니다 (아래 [Tetragon 하트비트](#tetragon-하트비트-realtetragon_hbsh) 참고).
+
+```bash
+tetragon --export-filename tetragon.jsonl --metrics-server :2112
+python3 tetragon_heartbeat.py --node <node_name> --out heartbeat.jsonl
+python3 gapfind.py tetragon.jsonl heartbeat.jsonl   # 파일 여러 개를 합쳐서 분석
 ```
 
 LLM 판단은 선택입니다.
@@ -37,11 +45,11 @@ python3 eval.py --llm                                        # LLM 포함 정확
 
 1. **파싱**: Falco / Tetragon JSON 줄을 같은 이벤트 형태로 바꾸고 호스트(Falco `hostname`, Tetragon `node_name`)별로 나눕니다.
    Tetragon이 시작할 때 `/proc`를 훑어 만든 이벤트(`flags: procFS`)와 `process_exit`는 새 활동이 아니라서 뺍니다.
-2. **주기 신호 찾기**: Falco metrics 스냅숏이 있으면 그것만 하트비트로 씁니다.
+2. **주기 신호 찾기**: 수집기 하트비트(Falco metrics 스냅숏, [tetragon_heartbeat.py](tetragon_heartbeat.py)가 남긴 Tetragon 메트릭)가 있으면 그것만 씁니다.
    없으면 간격이 일정한 프로세스를 씁니다. 일정하게 도는 워크로드는 멈추는 게 정상일 수 있어서, 수집기 자신의 하트비트가 있으면 기준으로 삼지 않습니다.
 3. **창별 판정**: 드롭이 보고되면 `LOST`, 주기 신호가 끊기면 `SUSP`. 드롭은 늦게 보고되므로 보고 바로 앞의 `SUSP` 창들도 `LOST`로 올립니다.
 4. **하트비트 공백 확정**: 끊긴 하트비트 앞뒤 스냅숏을 비교합니다.
-   - `falco.start_ts`가 바뀌었거나 커널 카운터가 줄었다 → 수집기 재시작 → `LOST`
+   - 프로세스 시작 시각(Falco `falco.start_ts`, Tetragon `process_start_time_seconds`)이 바뀌었거나 커널 카운터가 줄었다 → 수집기 재시작 → `LOST`
    - 카운터가 이어졌고 드롭 0 → 커널은 계속 쌓았고 나중에 처리됨 → `DELAYED`
 5. **(`--llm`)** 남은 `SUSP` 구간만, 호스트의 창 요약 전체와 함께 LLM에게 보내 `QUIET` / `UNOBSERVED`와 근거를 받습니다.
 
@@ -63,7 +71,7 @@ falco -o engine.kind=modern_ebpf -o json_output=true \
 [node-a] 이벤트 80개, 주기 신호: falco-metrics
   09:16:30  █████~~~█████XXX·████
   [DELAYED] 09:17:20–09:17:50  하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0
-  [LOST   ] 09:18:40–09:19:10  수집기 재시작 (falco.start_ts 변경)
+  [LOST   ] 09:18:40–09:19:10  수집기 재시작 (프로세스 시작 시각 변경)
   [QUIET  ] 09:19:10–09:19:20  주기 신호는 정상, 다른 활동 거의 없음
 
 [node-b] 이벤트 108개, 주기 신호: falco-metrics
@@ -98,8 +106,43 @@ Tetragon v1.6.0 내보내기에는 하트비트가 없어서, 3초마다 도는 
 | 09:21:10–09:21:40 | 워크로드를 멈춤 (정말 조용함) | 관측됨 |
 | 09:22:30–09:23:00 | Tetragon 컨테이너 삭제 (수집기 꺼짐) | 관측 안 됨 |
 
-셋 다 "워크로드 리듬이 끊김"으로 똑같이 보여서 규칙으로는 가를 수 없습니다. 이게 LLM 단계가 필요한 경우입니다.
-Tetragon의 커널 링버퍼 유실은 JSON에 나오지 않고 Prometheus 메트릭에만 있어서, 그걸 로그에 함께 남기면 Falco처럼 확정할 수 있을 것입니다.
+셋 다 "워크로드 리듬이 끊김"으로 똑같이 보여서 규칙으로는 가를 수 없습니다. 아래 정확도에서 보듯 LLM도 가르지 못했습니다.
+
+### Tetragon 하트비트 ([real/tetragon_hb.sh](real/tetragon_hb.sh))
+
+Tetragon의 유실 카운터는 JSON 내보내기에는 없고 Prometheus 메트릭(`--metrics-server`)에만 있습니다.
+[tetragon_heartbeat.py](tetragon_heartbeat.py)가 5초마다 메트릭을 읽어 JSON 한 줄씩 남기고, 분석기는 이것을 Falco metrics와 같은 하트비트로 씁니다.
+
+| 필드 | 메트릭 | 쓰임 |
+|---|---|---|
+| `start_ts` | `process_start_time_seconds` | 바뀌면 수집기 재시작 |
+| `events_received` | `tetragon_observer_ringbuf_events_received_total` | 끊김 앞뒤로 이어지면 늦게 처리된 것 |
+| `lost_total` | `…ringbuf_events_lost_total` + `…ringbuf_queue_events_lost_total` + `tetragon_missed_*_probes_total` + `tetragon_export_ratelimit_events_dropped_total` | 늘어나면 드롭 |
+
+Tetragon이 응답하지 않으면 아무것도 쓰지 않아서, 하트비트가 끊긴 것 자체가 신호가 됩니다.
+같은 워크로드에 pause 단계를 더해 다시 돌렸습니다.
+
+```bash
+python3 gapfind.py real/tetragon_hb.jsonl real/tetragon_hb_heartbeat.jsonl
+```
+
+```
+[tg-node] 이벤트 202개, 주기 신호: tetragon-metrics
+  09:45:10  █████···█████~~~~████XXXX████
+  [QUIET  ] 09:46:00–09:46:30  주기 신호는 정상, 다른 활동 거의 없음
+  [DELAYED] 09:47:20–09:48:00  하트비트 45초 끊김, 커널 카운터 연속 (+96건), 드롭 0
+  [LOST   ] 09:48:40–09:49:20  수집기 재시작 (프로세스 시작 시각 변경)
+```
+
+| 구간 | 한 일 | 판정 |
+|---|---|---|
+| 09:46:00–09:46:30 | 워크로드 중지 (정말 조용함) | `QUIET` ✓ |
+| 09:47:20–09:48:00 | `docker pause tetragon` 40초 | `DELAYED` ✓ |
+| 09:48:40–09:49:20 | Tetragon 컨테이너 삭제 후 재시작 | `LOST` ✓ |
+
+하트비트가 없을 때 규칙도 LLM도 가르지 못한 "워크로드 중지"와 "수집기 중지"를, 하트비트가 있으면 규칙만으로 모두 맞힙니다.
+
+HTML 타임라인: [real/tetragon_hb.html](real/tetragon_hb.html)
 
 ### 부하로 드롭 유도는 실패 ([real/scenario.sh](real/scenario.sh))
 
@@ -108,34 +151,36 @@ Falco는 read/write를 기본으로 수집하지 않고, 10코어 환경에서�
 
 ## 정확도 ([eval.py](eval.py), [cases.json](cases.json))
 
-합성 4개 + 실제 Falco 5개 + 실제 Tetragon 3개, 정답이 있는 12개 구간입니다.
+합성 4개 + 실제 Falco 5개 + 실제 Tetragon(하트비트 없음) 3개 + 실제 Tetragon(하트비트) 3개, 정답이 있는 15개 구간입니다.
 
 | 방식 | 정답 | 오답 | 보류 |
 |---|---|---|---|
-| 규칙만 (`SUSP`는 판단 보류) | 7 | 0 | 5 |
-| 규칙 + 단순 (`SUSP`를 모두 "관측 안 됨"으로) | 10 | 2 | 0 |
-| 규칙 + LLM (OpenAI, `eval.py` 기본 모델 `gpt-5.5`) | 10 | 2 | 0 |
+| 규칙만 (`SUSP`는 판단 보류) | 10 | 0 | 5 |
+| 규칙 + 단순 (`SUSP`를 모두 "관측 안 됨"으로) | 13 | 2 | 0 |
+| 규칙 + LLM (OpenAI, `eval.py` 기본 모델 `gpt-5.5`) | 13 | 2 | 0 |
 
-- **규칙만**은 틀리지 않지만 5개를 판단하지 못합니다.
-- **규칙+단순**은 10개를 맞히지만, Tetragon의 두 "정말 조용한" 구간을 유실로 잘못 봅니다(오탐).
-- **규칙+LLM**도 10개로 점수는 같지만, 틀린 곳이 다릅니다.
+- **규칙만**은 틀리지 않고, 보류한 5개는 모두 하트비트가 없는 로그(합성 2개, Tetragon 3개)입니다. 하트비트가 있는 로그 8개는 규칙만으로 모두 맞혔습니다.
+- **규칙+단순**은 하트비트 없는 Tetragon의 두 "정말 조용한" 구간을 유실로 잘못 봅니다(오탐).
+- **규칙+LLM**도 13개로 점수는 같지만, 틀린 곳이 다르고 실행마다 바뀝니다.
 
-LLM이 판단한 5개 `SUSP` 구간만 보면 이렇습니다. 전체 출력은 [eval_llm.txt](eval_llm.txt)에 있습니다.
+### LLM 판단 (3회 실행)
 
-| 구간 | 정답 | 규칙+단순 | 규칙+LLM |
-|---|---|---|---|
-| 합성: 드롭 신호 없는 전체 블랙아웃 | 관측 안 됨 | ✓ | ✓ |
-| 합성: healthcheck만 사라진 부분 유실 | 관측 안 됨 | ✓ | ✗ 관측됨 |
-| Tetragon: 막 켜졌고 워크로드 시작 전 | 관측됨 | ✗ | ✓ |
-| Tetragon: 워크로드를 멈춘 조용한 40초 | 관측됨 | ✗ | ✗ 관측 안 됨 |
-| Tetragon: 수집기 삭제 | 관측 안 됨 | ✓ | ✓ |
+LLM에게 넘어간 5개 `SUSP` 구간의 결과입니다. 마지막 실행의 전체 출력은 [eval_llm.txt](eval_llm.txt)에 있습니다.
+
+| 구간 | 정답 | 규칙+단순 | LLM 1, 2회차 | LLM 3회차 |
+|---|---|---|---|---|
+| 합성: 드롭 신호 없는 전체 블랙아웃 | 관측 안 됨 | ✓ | ✓ | ✓ |
+| 합성: healthcheck만 사라진 부분 유실 | 관측 안 됨 | ✓ | ✗ | ✗ |
+| Tetragon: 막 켜졌고 워크로드 시작 전 | 관측됨 | ✗ | ✓ | ✓ |
+| Tetragon: 워크로드를 멈춘 조용한 40초 | 관측됨 | ✗ | ✗ 관측 안 됨 | ✓ 관측됨 |
+| Tetragon: 수집기 삭제 | 관측 안 됨 | ✓ | ✓ 관측 안 됨 | ✗ 관측됨 |
 
 해석:
 
-- LLM은 Tetragon이 막 켜진 구간을 맞혔습니다. 규칙은 "리듬이 없음"만 보지만, LLM은 앞뒤 흐름에서 워크로드가 아직 시작 전이라는 걸 읽었습니다.
-- 대신 합성 부분 유실을 "관측됨"으로 봤습니다. 같은 구간을 이전 프롬프트로 돌렸을 때는 `UNOBSERVED (medium)`이었습니다. 이번 프롬프트에 넣은 "주기 신호가 워크로드라면 워크로드가 멈춘 것일 수도 있다"는 문장이 healthcheck가 멈춘 경우에도 적용된 것으로 보입니다.
-- Tetragon의 "워크로드 중지"와 "수집기 중지"는 둘 다 "리듬이 끊기고 다른 이벤트가 거의 없음"이라 LLM도 가르지 못했습니다. 이 둘을 가르려면 추론보다 수집기 쪽 증거(Tetragon 메트릭 같은 하트비트)가 필요합니다.
-- 정답이 있는 LLM 판단 구간이 5개뿐이고 한 번 돌린 결과라, 점수 차이를 일반화하기는 어렵습니다.
+- **Tetragon "워크로드 중지" vs "수집기 중지"**: LLM은 매번 두 구간에 **같은 답**을 냈고, 회차에 따라 둘 다 "관측 안 됨"이거나 둘 다 "관측됨"이었습니다. 점수가 같아 보여도 실제로는 둘을 가르지 못하고 한쪽으로 찍고 있습니다. 로그 안에 둘을 가를 정보가 없기 때문이고, 하트비트를 더하자 규칙만으로 풀렸습니다.
+- **Tetragon이 막 켜진 구간**은 3회 모두 맞혔습니다. 앞뒤 흐름에서 워크로드가 아직 시작 전이라는 걸 읽은 것으로 보입니다.
+- **합성 부분 유실**은 3회 모두 "관측됨"으로 틀렸습니다. 이전 프롬프트로 돌렸을 때는 `UNOBSERVED (medium)`이었습니다. 프롬프트에 넣은 "주기 신호가 워크로드라면 워크로드가 멈춘 것일 수도 있다"는 문장이 healthcheck가 멈춘 경우에도 적용된 것으로 보입니다.
+- 결론: 이 실험에서 LLM이 확실히 더한 가치는 1개 구간입니다. 판단을 바꾼 건 LLM보다 **수집기 하트비트**였습니다. 정답이 있는 LLM 판단 구간이 5개뿐이라 일반화하기는 어렵습니다.
 
 ### LLM 출력 예시
 
@@ -158,7 +203,7 @@ LLM이 판단한 5개 `SUSP` 구간만 보면 이렇습니다. 전체 출력은 
 live.jsonl 감시 중 (1초마다 확인, Ctrl-C로 종료)
 09:32:50 [node-a] 유실(추정) 09:17:20–09:17:40 (진행 중) 끊긴 주기 신호: falco-metrics / 다른 이벤트 4건
 09:32:53 [node-a] 지연 09:17:20–09:17:50 (종료) 하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0
-09:32:53 [node-a] 유실(확정) 09:18:40–09:19:10 (종료) 수집기 재시작 (falco.start_ts 변경)
+09:32:53 [node-a] 유실(확정) 09:18:40–09:19:10 (종료) 수집기 재시작 (프로세스 시작 시각 변경)
 ```
 
 ## 한계

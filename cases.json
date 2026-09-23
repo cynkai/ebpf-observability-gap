@@ -24,5 +24,12 @@
   {"file": "real/tetragon.jsonl", "host": "tg-node", "start": "09:21:10", "end": "09:21:40", "truth": "observed",
    "note": "Tetragon: 워크로드를 멈춘 조용한 40초"},
   {"file": "real/tetragon.jsonl", "host": "tg-node", "start": "09:22:30", "end": "09:23:00", "truth": "unobserved",
-   "note": "Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음"}
+   "note": "Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음"},
+
+  {"file": ["real/tetragon_hb.jsonl", "real/tetragon_hb_heartbeat.jsonl"], "host": "tg-node", "start": "09:46:00", "end": "09:46:30", "truth": "observed",
+   "note": "Tetragon+하트비트: 워크로드를 멈춘 조용한 40초"},
+  {"file": ["real/tetragon_hb.jsonl", "real/tetragon_hb_heartbeat.jsonl"], "host": "tg-node", "start": "09:47:20", "end": "09:47:50", "truth": "observed",
+   "note": "Tetragon+하트비트: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨"},
+  {"file": ["real/tetragon_hb.jsonl", "real/tetragon_hb_heartbeat.jsonl"], "host": "tg-node", "start": "09:48:40", "end": "09:49:10", "truth": "unobserved",
+   "note": "Tetragon+하트비트: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음"}
 ]
