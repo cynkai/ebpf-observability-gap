@@ -1,0 +1,58 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>관측 공백 타임라인</title>
+<style>
+:root { --bg:#fbfaf8; --fg:#1f1e1c; --muted:#6b6862; --line:#e4e1db;
+  --OBS:#3a7d5c; --QUIET:#c9d8cf; --DELAYED:#d9a441; --LOST:#c2452d; --SUSP:#8a63c7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1b1a19; --fg:#ecebe8; --muted:#a09d97; --line:#34322f;
+  --OBS:#5fae86; --QUIET:#3d4b43; --DELAYED:#e0b25a; --LOST:#e0654b; --SUSP:#a888de; } }
+body { margin:0; padding:24px 16px; background:var(--bg); color:var(--fg);
+  font:15px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+main { max-width:960px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:28px 0 2px; }
+.meta { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.keys { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+.keys i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.bar { display:flex; gap:1px; height:34px; }
+.bar i { flex:1; min-width:2px; border-radius:2px; cursor:help; }
+.bar i:hover { outline:2px solid var(--fg); }
+.axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:4px; }
+.OBS { background:var(--OBS); } .QUIET { background:var(--QUIET); } .DELAYED { background:var(--DELAYED); }
+.LOST { background:var(--LOST); } .SUSP { background:var(--SUSP); }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tag { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-weight:600; font-size:12px; white-space:nowrap; }
+.tag.QUIET { color:var(--fg); }
+</style></head><body><main>
+<h1>관측 공백 타임라인</h1><p class="meta">real/tetragon.jsonl · 한 칸 = 10초 · 칸에 마우스를 올리면 근거가 보입니다</p>
+<div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
+<section><h2>tg-node</h2>
+<p class="meta">주기 신호: cat, sleep</p>
+<div class="bar"><i class="SUSP" title="09:20:10 유실(추정)
+modprobe×2"></i><i class="OBS" title="09:20:20 관측
+containerd-shim-runc-v2×2, runc×2, cat×2, sleep×2, 6×1, iptables×1, sh×1"></i><i class="QUIET" title="09:20:30 조용
+cat×3, sleep×3"></i><i class="QUIET" title="09:20:40 조용
+cat×4, sleep×4"></i><i class="QUIET" title="09:20:50 조용
+cat×3, sleep×3"></i><i class="OBS" title="09:21:00 관측
+runc×3, cat×2, sleep×2, containerd-shim-runc-v2×1, iptables×1"></i><i class="SUSP" title="09:21:10 유실(추정)
+fstrim×1"></i><i class="SUSP" title="09:21:20 유실(추정)
+이벤트 없음"></i><i class="SUSP" title="09:21:30 유실(추정)
+이벤트 없음"></i><i class="OBS" title="09:21:40 관측
+containerd-shim-runc-v2×2, runc×2, cat×2, sleep×2, 6×1, iptables×1, sh×1"></i><i class="QUIET" title="09:21:50 조용
+cat×3, sleep×3"></i><i class="QUIET" title="09:22:00 조용
+cat×4, sleep×4"></i><i class="QUIET" title="09:22:10 조용
+cat×3, sleep×3"></i><i class="QUIET" title="09:22:20 조용
+cat×2, sleep×2, runc×1"></i><i class="SUSP" title="09:22:30 유실(추정)
+이벤트 없음"></i><i class="SUSP" title="09:22:40 유실(추정)
+이벤트 없음"></i><i class="SUSP" title="09:22:50 유실(추정)
+이벤트 없음"></i><i class="OBS" title="09:23:00 관측
+modprobe×2, cat×2, sleep×2"></i><i class="QUIET" title="09:23:10 조용
+cat×3, sleep×3"></i><i class="QUIET" title="09:23:20 조용
+cat×3, sleep×3"></i><i class="QUIET" title="09:23:30 조용
+cat×4, sleep×4"></i><i class="OBS" title="09:23:40 관측
+cat×2, sleep×2, runc×2"></i></div>
+<div class="axis"><span>09:20:10</span><span>09:23:50</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag SUSP">유실(추정)</b></td><td>09:20:10–09:20:20</td><td>끊긴 주기 신호: cat, sleep / 다른 이벤트 2건</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:20:30–09:21:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag SUSP">유실(추정)</b></td><td>09:21:10–09:21:40</td><td>끊긴 주기 신호: cat, sleep / 다른 이벤트 1건</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:21:50–09:22:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag SUSP">유실(추정)</b></td><td>09:22:30–09:23:00</td><td>끊긴 주기 신호: cat, sleep / 다른 이벤트 0건</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:23:10–09:23:40</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section>
+</main></body></html>

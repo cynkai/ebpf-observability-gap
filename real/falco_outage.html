@@ -1,0 +1,89 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>관측 공백 타임라인</title>
+<style>
+:root { --bg:#fbfaf8; --fg:#1f1e1c; --muted:#6b6862; --line:#e4e1db;
+  --OBS:#3a7d5c; --QUIET:#c9d8cf; --DELAYED:#d9a441; --LOST:#c2452d; --SUSP:#8a63c7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1b1a19; --fg:#ecebe8; --muted:#a09d97; --line:#34322f;
+  --OBS:#5fae86; --QUIET:#3d4b43; --DELAYED:#e0b25a; --LOST:#e0654b; --SUSP:#a888de; } }
+body { margin:0; padding:24px 16px; background:var(--bg); color:var(--fg);
+  font:15px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+main { max-width:960px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:28px 0 2px; }
+.meta { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.keys { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+.keys i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.bar { display:flex; gap:1px; height:34px; }
+.bar i { flex:1; min-width:2px; border-radius:2px; cursor:help; }
+.bar i:hover { outline:2px solid var(--fg); }
+.axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:4px; }
+.OBS { background:var(--OBS); } .QUIET { background:var(--QUIET); } .DELAYED { background:var(--DELAYED); }
+.LOST { background:var(--LOST); } .SUSP { background:var(--SUSP); }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tag { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-weight:600; font-size:12px; white-space:nowrap; }
+.tag.QUIET { color:var(--fg); }
+</style></head><body><main>
+<h1>관측 공백 타임라인</h1><p class="meta">real/falco_outage.jsonl · 한 칸 = 10초 · 칸에 마우스를 올리면 근거가 보입니다</p>
+<div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
+<section><h2>node-a</h2>
+<p class="meta">주기 신호: falco-metrics</p>
+<div class="bar"><i class="OBS" title="09:16:30 관측
+falco-metrics×2, cat×2"></i><i class="OBS" title="09:16:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:16:50 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:17:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:17:10 관측
+cat×3, falco-metrics×1"></i><i class="DELAYED" title="09:17:20 지연
+cat×4
+하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0"></i><i class="DELAYED" title="09:17:30 지연
+cat×3
+하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0"></i><i class="DELAYED" title="09:17:40 지연
+cat×3
+하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0"></i><i class="OBS" title="09:17:50 관측
+cat×4, falco-metrics×1"></i><i class="OBS" title="09:18:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:10 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:20 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:18:30 관측
+falco-metrics×2, cat×2"></i><i class="LOST" title="09:18:40 유실(확정)
+이벤트 없음
+수집기 재시작 (falco.start_ts 변경)"></i><i class="LOST" title="09:18:50 유실(확정)
+이벤트 없음
+수집기 재시작 (falco.start_ts 변경)"></i><i class="LOST" title="09:19:00 유실(확정)
+이벤트 없음
+수집기 재시작 (falco.start_ts 변경)"></i><i class="QUIET" title="09:19:10 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="09:19:20 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:19:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:50 관측
+cat×2, falco-metrics×1"></i></div>
+<div class="axis"><span>09:16:30</span><span>09:20:00</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag DELAYED">지연</b></td><td>09:17:20–09:17:50</td><td>하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:18:40–09:19:10</td><td>수집기 재시작 (falco.start_ts 변경)</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:19:10–09:19:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>node-b</h2>
+<p class="meta">주기 신호: falco-metrics</p>
+<div class="bar"><i class="OBS" title="09:16:30 관측
+falco-metrics×2, cat×2"></i><i class="OBS" title="09:16:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:16:50 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:17:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:17:10 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:17:20 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:17:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:17:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:17:50 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:18:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:10 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:20 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:18:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:18:50 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:19:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:10 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:20 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:19:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:40 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:50 관측
+cat×2, falco-metrics×1"></i></div>
+<div class="axis"><span>09:16:30</span><span>09:20:00</span></div>
+<p class="meta">전 구간 관측됨</p>
+</section>
+</main></body></html>

@@ -1,0 +1,28 @@
+[
+  {"file": "sample.jsonl", "host": "node-1", "start": "10:02:00", "end": "10:03:20", "truth": "observed",
+   "note": "합성: 업무 이벤트 없이 healthcheck만 도는 조용한 구간"},
+  {"file": "sample.jsonl", "host": "node-1", "start": "10:05:00", "end": "10:05:40", "truth": "unobserved",
+   "note": "합성: 이벤트 없음 + Falco 드롭 알림"},
+  {"file": "sample.jsonl", "host": "node-1", "start": "10:07:30", "end": "10:08:10", "truth": "unobserved",
+   "note": "합성: 드롭 신호 없는 전체 블랙아웃"},
+  {"file": "sample.jsonl", "host": "node-1", "start": "10:09:00", "end": "10:09:30", "truth": "unobserved",
+   "note": "합성: 업무 이벤트는 있는데 healthcheck만 사라진 부분 유실"},
+
+  {"file": "real/falco_quiet.jsonl", "host": "0e51ef4cb9e3", "start": "08:27:40", "end": "08:28:30", "truth": "observed",
+   "note": "Falco: 워크로드를 멈춘 조용한 1분"},
+  {"file": "real/falco_storm.jsonl", "host": "dc731196ee92", "start": "08:42:40", "end": "08:43:30", "truth": "observed",
+   "note": "Falco: exec/open 폭주 1분, 드롭 0"},
+  {"file": "real/falco_outage.jsonl", "host": "node-a", "start": "09:17:20", "end": "09:17:50", "truth": "observed",
+   "note": "Falco: docker pause 40초, 커널 버퍼에 쌓였다가 늦게 처리됨"},
+  {"file": "real/falco_outage.jsonl", "host": "node-a", "start": "09:18:40", "end": "09:19:10", "truth": "unobserved",
+   "note": "Falco: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음"},
+  {"file": "real/falco_outage.jsonl", "host": "node-b", "start": "09:18:40", "end": "09:19:10", "truth": "observed",
+   "note": "Falco: 같은 시각 대조군 노드, 계속 정상"},
+
+  {"file": "real/tetragon.jsonl", "host": "tg-node", "start": "09:20:10", "end": "09:20:20", "truth": "observed",
+   "note": "Tetragon: 막 켜졌고 워크로드 시작 전"},
+  {"file": "real/tetragon.jsonl", "host": "tg-node", "start": "09:21:10", "end": "09:21:40", "truth": "observed",
+   "note": "Tetragon: 워크로드를 멈춘 조용한 40초"},
+  {"file": "real/tetragon.jsonl", "host": "tg-node", "start": "09:22:30", "end": "09:23:00", "truth": "unobserved",
+   "note": "Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음"}
+]
