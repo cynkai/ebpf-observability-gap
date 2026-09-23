@@ -11,9 +11,13 @@ cases.json의 각 구간에 대해 세 방식을 비교한다.
   python3 eval.py --llm                   # + OpenAI gpt-5.5
   python3 eval.py --llm --votes 5         # 5번 물어 80% 이상 같은 답일 때만 판정
   python3 eval.py --llm --provider anthropic
+  python3 eval.py --chaos real/chaos           # 자동 장애 주입 실험의 정답(faults.jsonl)으로 채점
 """
 import argparse
 import json
+import os
+from collections import Counter
+from datetime import datetime, timezone
 
 import gapfind as g
 
@@ -80,6 +84,54 @@ def run(cases, window=10, llm=None):
     return rows, score
 
 
+# 자동 장애 주입 실험을 세 가지 증거 조건으로 채점한다
+CHAOS_SETUPS = {
+    "하트비트 + 교차": ["falco.jsonl", "tetragon.jsonl", "heartbeat.jsonl"],
+    "교차만 (Tetragon 하트비트 없음)": ["falco.jsonl", "tetragon.jsonl"],
+    "Tetragon 단독": ["tetragon.jsonl"],
+}
+
+
+def chaos_cases(directory, window=5):
+    """faults.jsonl의 장애마다, 장애가 걸린 동안의 창들을 정답 케이스로 만든다.
+    첫 창은 장애가 막 시작된 창이라 빼고, 창 경계에 맞춰 안쪽만 쓴다."""
+    def hms(t):
+        return datetime.fromtimestamp(t, timezone.utc).strftime("%H:%M:%S")
+    cases = {name: [] for name in CHAOS_SETUPS}
+    for line in open(os.path.join(directory, "faults.jsonl")):
+        f = json.loads(line)
+        lo = (int(f["start"]) // window + 2) * window
+        hi = int(f["end"]) // window * window
+        if hi - lo < window:
+            continue
+        for name, files in CHAOS_SETUPS.items():
+            for collector, truth in f["truth"].items():
+                if collector == "falco" and "falco.jsonl" not in files:
+                    continue
+                cases[name].append({
+                    "file": [os.path.join(directory, x) for x in files], "window": window,
+                    "host": "chaos", "collector": collector, "start": hms(lo), "end": hms(hi),
+                    "truth": truth, "note": f["fault"]})
+    return cases
+
+
+def print_chaos(directory, window, llm):
+    for name, cases in chaos_cases(directory, window).items():
+        rows, score = run(cases, window, llm)
+        print(f"== {name}: {len(rows)}개 구간")
+        for k, s in score.items():
+            print(f"  {k:8} {s['correct']}/{len(rows)}  (오답 {s['wrong']}, 보류 {s['undecided']})")
+        # 장애 종류 × 수집기별로 규칙만의 결과
+        by = Counter()
+        for c, got in rows:
+            g_ = got["규칙만"]
+            by[(c["note"], c["collector"], "O" if g_ == c["truth"] else "-" if g_ == "undecided" else "X")] += 1
+        keys = sorted({(f, col) for f, col, _ in by})
+        print("  규칙만, 장애별:  " + "  ".join(
+            f"{f}/{col} {by[(f, col, 'O')]}O {by[(f, col, 'X')]}X {by[(f, col, '-')]}-" for f, col in keys))
+        print()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--cases", default="cases.json")
@@ -88,8 +140,12 @@ def main():
     ap.add_argument("--provider", choices=["openai", "anthropic"], default="openai")
     ap.add_argument("--model")
     ap.add_argument("--votes", type=int, default=1)
+    ap.add_argument("--chaos", metavar="DIR", help="자동 장애 주입 실험 폴더 (faults.jsonl)로 채점")
     args = ap.parse_args()
     llm = (args.provider, args.model or g.DEFAULT_MODEL[args.provider], args.votes) if args.llm else None
+    if args.chaos:
+        print_chaos(args.chaos, 5, llm)
+        return
 
     rows, score = run(json.load(open(args.cases)), args.window, llm)
     cols = list(score)

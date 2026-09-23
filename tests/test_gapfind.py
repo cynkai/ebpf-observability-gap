@@ -111,6 +111,42 @@ def test_k8s_pod_restarts_at_5s_windows():
     assert gaps("gap-worker2/falco") == []
 
 
+def _tetragon_with_storage_loss(lose_from, lose_to):
+    """5초마다 하트비트, 3초마다 워크로드 exec. [lose_from, lose_to) 동안의 줄은 로그에서 지워졌다."""
+    E = g.Event
+    events, exported = [], 0
+    for t in range(0, 120):
+        if t % 3 == 0:
+            exported += 1
+            if not lose_from <= t < lose_to:
+                events.append(E(t + 0.5, "h", "cat", collector="tetragon"))
+                events.append(E(t + 0.5, "h", "", 0, {"raw": True}, "tetragon"))
+        if t % 5 == 0:
+            meta = {"start_ts": 1, "n_evts": t, "lost": 0, "exported": exported}
+            events.append(E(t + 0.9, "h", "tetragon-metrics", 0, meta, "tetragon"))
+    return sorted(events, key=lambda e: e.ts)
+
+
+def test_storage_reconciliation_flags_deleted_lines():
+    reports = g.analyze(_tetragon_with_storage_loss(40, 70), 10, 0.7)
+    tg = next(r for r in reports if r.key == "h/tetragon")
+    lost = [w for w in tg.wins if w.state == "LOST"]
+    assert lost and all("저장 단계 유실" in w.reason for w in lost)
+    assert all(35 <= w.start < 75 for w in lost)
+
+
+def test_storage_reconciliation_quiet_without_loss():
+    reports = g.analyze(_tetragon_with_storage_loss(0, 0), 10, 0.7)
+    assert not [w for w in reports[0].wins if w.state == "LOST"]
+
+
+def test_prometheus_text():
+    reports = g.analyze(g.load("real/falco_outage.jsonl"), 10, 0.7)
+    text = g.prometheus_text(reports, 10)
+    assert 'gapfind_gap_seconds_total{host="node-a",collector="falco",state="LOST"} 30' in text
+    assert 'gapfind_gap_active{host="node-b",collector="falco"} 0' in text
+
+
 # ---------- LLM 투표 ----------
 
 def test_votes_split_become_unsure(monkeypatch):

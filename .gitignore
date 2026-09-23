@@ -3,3 +3,4 @@ __pycache__/
 .env
 real/k8s/logs/
 real/.cross_*
+real/vm/logs/

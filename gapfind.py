@@ -13,12 +13,17 @@
   python3 gapfind.py sample.jsonl --llm              # SUSP 구간을 LLM에게 판단 (기본 OpenAI)
   python3 gapfind.py sample.jsonl --html report.html # HTML 타임라인
   python3 gapfind.py falco.jsonl --follow            # 실시간 감시 (tail -f 처럼)
+  python3 gapfind.py falco.jsonl --follow --webhook URL --metrics-port 9109   # 알림 + Prometheus
   python3 gapfind.py tetragon.jsonl heartbeat.jsonl  # 여러 파일을 합쳐서 (Tetragon + 하트비트)
   python3 gapfind.py falco.jsonl tetragon.jsonl      # 같은 호스트의 두 수집기를 서로 교차 확인
   python3 gapfind.py sample.jsonl --llm --votes 5    # 5번 물어 답이 갈리면 판단 보류
 """
 import argparse
 import html
+import threading
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from bisect import bisect_right
 import json
 import re
 import time
@@ -64,14 +69,16 @@ def parse_line(d):
         if d["rule"] == FALCO_METRICS_RULE:
             # 주기적으로 나오므로 하트비트가 되고, 직전 스냅숏 이후 드롭 수도 알려준다
             n = int(fields.get("scap.n_drops", 0)) - int(fields.get("scap.n_drops_prev", 0))
-            meta = {"start_ts": fields.get("falco.start_ts"), "n_evts": fields.get("scap.n_evts", 0)}
+            meta = {"start_ts": fields.get("falco.start_ts"), "n_evts": fields.get("scap.n_evts", 0),
+                    "exported": fields.get("falco.rules.matches_total")}
             return Event(ts, host, "falco-metrics", max(n, 0), meta)
         return Event(ts, host, fields.get("proc.name", "?"))
     host = d.get("node_name", "?")  # Tetragon
     if "tetragon_heartbeat" in d:
         # 유실 카운터는 누적값이라, 드롭 수는 analyze에서 앞 하트비트와 비교해 구한다
         hb = d["tetragon_heartbeat"]
-        meta = {"start_ts": hb["start_ts"], "n_evts": hb["events_received"], "lost": hb["lost_total"]}
+        meta = {"start_ts": hb["start_ts"], "n_evts": hb["events_received"], "lost": hb["lost_total"],
+                "exported": hb.get("events_exported")}
         return Event(ts, host, "tetragon-metrics", 0, meta)
     if "rate_limit_info" in d:  # 내보내기 단계에서 버린 이벤트
         n = int(d["rate_limit_info"].get("number_of_dropped_process_events", 1))
@@ -106,10 +113,22 @@ def load_one(path):
                 ev = parse_line(d)
             except (json.JSONDecodeError, KeyError):
                 continue  # --follow 중에 반쯤 쓰인 줄이 올 수 있다
+            collector = "falco" if "rule" in d else "tetragon"
             if ev:
-                ev.collector = "falco" if "rule" in d else "tetragon"
+                ev.collector = collector
                 events.append(ev)
+            if is_exported_event(d):
+                # 저장 단계 대조용: 수집기가 '내보냈다'고 센 이벤트가 로그에 실제로 몇 줄 있는지
+                host = d.get("hostname") or d.get("node_name", "?")
+                events.append(Event(parse_ts(d["time"]), host, "", 0, {"raw": True}, collector))
     return events
+
+
+def is_exported_event(d):
+    """수집기의 내보내기 카운터가 세는 줄인가 (Falco: 규칙 알림, Tetragon: 하트비트 외 모든 이벤트)."""
+    if "rule" in d:
+        return not d["rule"].startswith("Falco internal")
+    return "tetragon_heartbeat" not in d
 
 
 # ---------- 2. 창 나누기 + 판정 ----------
@@ -142,6 +161,8 @@ class HostReport:
 def build_windows(events, size, t0, t1):
     wins = [Window(t0 + i * size) for i in range(int((t1 - t0) // size) + 1)]
     for ev in events:
+        if not (t0 <= ev.ts < t0 + len(wins) * size):
+            continue  # 시간축 밖의 대조용 줄
         w = wins[int((ev.ts - t0) // size)]
         w.drops += ev.drops
         if ev.proc:
@@ -239,6 +260,58 @@ def explain_heartbeat_gaps(wins, events, size):
                 w.state, w.reason = state, reason
 
 
+def reconcile_storage(wins, events):
+    """하트비트의 '내보낸 이벤트 수'와 로그에 실제로 있는 줄 수를 대조한다.
+
+    부족분(내보냄 - 로그 줄)은 이벤트 시각과 카운트 시각이 어긋나 잠깐 생겼다 사라지기도 하지만,
+    로그에서 지워진 줄 때문에 생긴 부족분은 끝까지 남는다. 그래서 각 하트비트에서 '그 뒤로 가장
+    낮은 부족분'(영구 부족분)을 보고, 그것이 늘어난 구간을 저장 단계 유실로 본다 (로그 회전 등).
+    """
+    beats = [e for e in events if e.meta and e.meta.get("exported") is not None]
+    raw = sorted(e.ts for e in events if e.meta and e.meta.get("raw"))
+    runs = []
+    for b in beats:  # 수집기 재시작마다 카운터가 새로 시작하므로 따로 본다
+        if runs and runs[-1][-1].meta["start_ts"] == b.meta["start_ts"]:
+            runs[-1].append(b)
+        else:
+            runs.append([b])
+    for run in runs:
+        if len(run) < 2:
+            continue
+        acts = [bisect_right(raw, b.ts) for b in run]
+        deficit = [(b.meta["exported"] - run[0].meta["exported"]) - (a - acts[0]) for b, a in zip(run, acts)]
+        # 영구 부족분: 그 뒤로 가장 낮은 값. 음수(로그가 카운터보다 앞섬)는 늦게 센 것이라 0으로 본다
+        permanent = [max(0, min(deficit[i:])) for i in range(len(run))]
+        i = 1
+        while i < len(run):
+            if permanent[i] <= permanent[i - 1]:
+                i += 1
+                continue
+            j = i  # 영구 부족분이 계속 늘어나는 구간을 하나의 유실로 묶는다
+            while j + 1 < len(run) and permanent[j + 1] > permanent[j]:
+                j += 1
+            missing = permanent[j] - permanent[i - 1]
+            sent = run[j].meta["exported"] - run[i - 1].meta["exported"]
+            if missing >= max(5, 0.02 * sent):
+                reason = (f"저장 단계 유실: 수집기는 {sent}건을 내보냈다는데 로그에는 "
+                          f"{acts[j] - acts[i - 1]}건 ({missing}건 없음)")
+                for w in wins:
+                    if run[i - 1].ts <= w.start < run[j].ts and w.state != "LOST":
+                        w.state, w.reason = "LOST", reason
+            i = j + 1
+
+
+def heartbeat_script_down(wins, rhythm):
+    """Tetragon 하트비트는 따로 도는 스크립트(tetragon_heartbeat.py)라 그것만 죽을 수 있다.
+    앞뒤 하트비트로도 설명되지 않은 SUSP 창에서 Tetragon 이벤트가 계속 나오고 있으면,
+    Tetragon 자체는 살아 있는 것으로 본다. (Falco metrics는 Falco가 직접 내므로 해당 없음)"""
+    for w in wins:
+        if w.state == "SUSP" and w.missing == ["tetragon-metrics"] \
+                and any(p not in rhythm for p in w.procs):
+            w.state = "QUIET" if w.quiet else "OBS"
+            w.reason = "하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"
+
+
 def count_heartbeat_drops(events):
     """누적 유실 카운터만 있는 하트비트(Tetragon)는 앞 하트비트와의 차이를 드롭으로 친다."""
     prev = None
@@ -303,8 +376,10 @@ def exact_gaps(report, size):
 
 def analyze(events, size, ratio):
     """호스트·수집기별로 나눠 분석한다. 모두 같은 시간축을 쓰게 t0/t1을 맞춘다."""
-    t0 = events[0].ts - events[0].ts % size
-    t1 = events[-1].ts
+    # 대조용 줄 표시(raw)는 시간축을 정하지 않는다 (Tetragon procFS 줄은 옛 프로세스 시작 시각을 달고 온다)
+    real = [e for e in events if not (e.meta and e.meta.get("raw"))]
+    t0 = real[0].ts - real[0].ts % size
+    t1 = real[-1].ts
     groups = {}
     for ev in events:
         groups.setdefault((ev.host, ev.collector), []).append(ev)
@@ -316,6 +391,8 @@ def analyze(events, size, ratio):
         wins = build_windows(evs, size, t0, t1)
         classify(wins, rhythm)
         explain_heartbeat_gaps(wins, evs, size)
+        reconcile_storage(wins, evs)
+        heartbeat_script_down(wins, rhythm)
         reports.append(HostReport(host, collector, wins, rhythm, evs))
     cross_check(reports)
     for r in reports:
@@ -484,7 +561,6 @@ def ask_llm(report, size, provider, model):
     asks = "\n".join(f"- segment_id={i}: {describe(s, size)[0]}" for i, s in targets)
     prompt = f"""eBPF 기반 보안 수집기(Falco/Tetragon) 로그 중 호스트 {report.host}의 {report.collector} 기록을 {size}초 창으로 요약한 타임라인이다.
 주기 신호로 쓰는 프로세스: {', '.join(report.rhythm) or '(찾지 못함)'}
-주기 신호가 수집기 자신의 하트비트가 아니라 워크로드라면, 워크로드가 멈춘 것일 수도 있다.
 
 <timeline>
 {timeline}
@@ -558,14 +634,63 @@ DEFAULT_MODEL = {"openai": "gpt-5.5", "anthropic": "claude-opus-5"}
 
 # ---------- 5. 실시간 감시 ----------
 
-def follow(path, size, ratio, every):
+def send_webhook(url, alert):
+    """새 공백을 JSON으로 POST한다. text 필드가 있어 Slack 수신 웹훅에도 그대로 쓸 수 있다."""
+    body = json.dumps(alert, ensure_ascii=False).encode()
+    req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
+    try:
+        urllib.request.urlopen(req, timeout=5).read()
+    except OSError as e:
+        print(f"  (웹훅 전송 실패: {e})", flush=True)
+
+
+def prometheus_text(reports, size):
+    """호스트·수집기·상태별 누적 공백 시간과, 지금 공백 중인지를 Prometheus 텍스트 형식으로."""
+    lines = ["# HELP gapfind_gap_seconds_total 상태별 누적 시간(초)",
+             "# TYPE gapfind_gap_seconds_total counter"]
+    for r in reports:
+        for state in SYMBOL:
+            n = sum(1 for w in r.wins if w.state == state) * size
+            lines.append(f'gapfind_gap_seconds_total{{host="{r.host}",collector="{r.collector}",'
+                         f'state="{state}"}} {n}')
+    lines += ["# HELP gapfind_gap_active 마지막 창이 공백(LOST/SUSP/DELAYED)이면 1",
+              "# TYPE gapfind_gap_active gauge"]
+    for r in reports:
+        active = int(bool(r.wins) and r.wins[-1].state in ("LOST", "SUSP", "DELAYED"))
+        lines.append(f'gapfind_gap_active{{host="{r.host}",collector="{r.collector}"}} {active}')
+    return "\n".join(lines) + "\n"
+
+
+def serve_metrics(port, latest):
+    """latest["text"]를 /metrics로 내보내는 작은 HTTP 서버를 백그라운드로 띄운다."""
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            body = latest["text"].encode()
+            self.send_response(200 if self.path == "/metrics" else 404)
+            self.send_header("Content-Type", "text/plain; version=0.0.4")
+            self.end_headers()
+            if self.path == "/metrics":
+                self.wfile.write(body)
+
+        def log_message(self, *a):
+            pass
+    server = HTTPServer(("0.0.0.0", port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+
+def follow(path, size, ratio, every, webhook=None, metrics_port=None):
     """파일을 주기적으로 다시 읽어, 새로 생긴 공백 구간을 한 번씩만 알린다."""
     seen = set()
+    latest = {"text": ""}
+    if metrics_port:
+        serve_metrics(metrics_port, latest)
     print(f"{' + '.join(path)} 감시 중 ({every}초마다 확인, Ctrl-C로 종료)", flush=True)
     while True:
         events = load(path)
         if events:
-            for r in analyze(events, size, ratio):
+            reports = analyze(events, size, ratio)
+            latest["text"] = prometheus_text(reports, size)
+            for r in reports:
                 for i, s in enumerate(r.segs):
                     if s["state"] not in ("LOST", "SUSP", "DELAYED"):
                         continue
@@ -576,7 +701,12 @@ def follow(path, size, ratio, every):
                     seen.add(key)
                     span, note = describe(s, size)
                     tag = "진행 중" if ongoing else "종료"
-                    print(f"{hms(time.time())} [{r.key}] {LABEL[s['state']]} {span} ({tag}) {note}", flush=True)
+                    text = f"[{r.key}] {LABEL[s['state']]} {span} ({tag}) {note}"
+                    print(f"{hms(time.time())} {text}", flush=True)
+                    if webhook:
+                        send_webhook(webhook, {"text": text, "host": r.host, "collector": r.collector,
+                                               "state": s["state"], "span": span, "ongoing": ongoing,
+                                               "reason": note})
         time.sleep(every)
 
 
@@ -595,11 +725,13 @@ def main():
     ap.add_argument("--html", metavar="PATH", help="HTML 타임라인을 이 경로에 저장")
     ap.add_argument("--follow", nargs="?", const=5, type=int, metavar="SEC",
                     help="파일을 계속 감시하며 새 공백을 알림 (기본 5초마다)")
+    ap.add_argument("--webhook", metavar="URL", help="--follow에서 새 공백을 이 URL로 POST (Slack 웹훅 호환)")
+    ap.add_argument("--metrics-port", type=int, metavar="PORT", help="--follow에서 /metrics를 이 포트로 노출")
     args = ap.parse_args()
 
     if args.follow:
         try:
-            follow(args.log, args.window, args.rhythm_ratio, args.follow)
+            follow(args.log, args.window, args.rhythm_ratio, args.follow, args.webhook, args.metrics_port)
         except KeyboardInterrupt:
             return
 

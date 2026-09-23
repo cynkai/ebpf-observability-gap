@@ -7,6 +7,7 @@ Falco metrics 스냅숏과 같은 방식으로 쓴다.
   - process_start_time_seconds 가 바뀜      -> 수집기 재시작 (그 사이 LOST)
   - 커널 이벤트 카운터가 이어지고 유실 0    -> 늦게 처리됨 (DELAYED)
   - 유실 카운터 증가                          -> LOST
+  - 내보낸 이벤트 수보다 로그 줄 수가 적음    -> 저장 단계에서 지워짐 (로그 회전 등) -> LOST
 
 Tetragon이 응답하지 않으면 아무것도 쓰지 않는다. 하트비트가 끊긴 것 자체가 신호다.
 
@@ -30,6 +31,7 @@ LOST_METRICS = (
     "tetragon_export_ratelimit_events_dropped_total",
 )
 RECEIVED_METRIC = "tetragon_observer_ringbuf_events_received_total"
+EXPORTED_METRIC = "tetragon_events_total"  # 내보낸 이벤트 수. 로그 줄 수와 정확히 같아야 한다
 
 
 def scrape(url):
@@ -64,6 +66,7 @@ def main():
                     "start_ts": m.get("process_start_time_seconds"),
                     "events_received": int(m.get(RECEIVED_METRIC, 0)),
                     "lost_total": int(sum(m.get(k, 0) for k in LOST_METRICS)),
+                    "events_exported": int(m.get(EXPORTED_METRIC, 0)),
                 },
                 "node_name": args.node,
                 "time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),

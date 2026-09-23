@@ -1,0 +1,82 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>관측 공백 타임라인</title>
+<style>
+:root { --bg:#fbfaf8; --fg:#1f1e1c; --muted:#6b6862; --line:#e4e1db;
+  --OBS:#3a7d5c; --QUIET:#c9d8cf; --DELAYED:#d9a441; --LOST:#c2452d; --SUSP:#8a63c7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1b1a19; --fg:#ecebe8; --muted:#a09d97; --line:#34322f;
+  --OBS:#5fae86; --QUIET:#3d4b43; --DELAYED:#e0b25a; --LOST:#e0654b; --SUSP:#a888de; } }
+body { margin:0; padding:24px 16px; background:var(--bg); color:var(--fg);
+  font:15px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+main { max-width:960px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:28px 0 2px; }
+.meta { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.keys { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+.keys i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.bar { display:flex; gap:1px; height:34px; }
+.bar i { flex:1; min-width:2px; border-radius:2px; cursor:help; }
+.bar i:hover { outline:2px solid var(--fg); }
+.axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:4px; }
+.OBS { background:var(--OBS); } .QUIET { background:var(--QUIET); } .DELAYED { background:var(--DELAYED); }
+.LOST { background:var(--LOST); } .SUSP { background:var(--SUSP); }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tag { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-weight:600; font-size:12px; white-space:nowrap; }
+.tag.QUIET { color:var(--fg); }
+</style></head><body><main>
+<h1>관측 공백 타임라인</h1><p class="meta">real/vm/rotation.jsonl · 한 칸 = 5초 · 칸에 마우스를 올리면 근거가 보입니다</p>
+<div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
+<section><h2>rot/tetragon</h2>
+<p class="meta">주기 신호: tetragon-metrics</p>
+<div class="bar"><i class="QUIET" title="21:49:50 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:49:55 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:50:00 조용
+tetragon-metrics×1"></i><i class="LOST" title="21:50:05 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:10 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:15 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:20 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:25 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:30 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:35 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:40 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:45 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:50 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:50:55 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:51:00 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:51:05 유실(확정)
+tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:51:10 유실(확정)
+true×490, tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="LOST" title="21:51:15 유실(확정)
+true×416, runc×3, net-interface-handler×3, bash×2, iptables×2, cat×2, sleep×2, locale-check×1, locale×1, sudo×1, sh×1, docker×1, containerd-shim-runc-v2×1, bridge-network-interface×1, systemd-sysctl×1, tetragon-metrics×1
+저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)"></i><i class="OBS" title="21:51:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:51:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:51:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:51:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:51:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:51:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:51:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:51:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:52:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:52:05 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:52:10 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:52:15 관측
+bash×2, runc×2, locale-check×1, locale×1, sudo×1, sh×1, pkill×1, docker×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i></div>
+<div class="axis"><span>21:49:50</span><span>21:52:20</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:49:50–21:50:05</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>21:50:05–21:51:20</td><td>저장 단계 유실: 수집기는 63701건을 내보냈다는데 로그에는 1862건 (61839건 없음)</td><td></td></tr></table></div>
+</section>
+</main></body></html>

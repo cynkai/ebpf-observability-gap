@@ -1,0 +1,490 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>관측 공백 타임라인</title>
+<style>
+:root { --bg:#fbfaf8; --fg:#1f1e1c; --muted:#6b6862; --line:#e4e1db;
+  --OBS:#3a7d5c; --QUIET:#c9d8cf; --DELAYED:#d9a441; --LOST:#c2452d; --SUSP:#8a63c7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1b1a19; --fg:#ecebe8; --muted:#a09d97; --line:#34322f;
+  --OBS:#5fae86; --QUIET:#3d4b43; --DELAYED:#e0b25a; --LOST:#e0654b; --SUSP:#a888de; } }
+body { margin:0; padding:24px 16px; background:var(--bg); color:var(--fg);
+  font:15px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+main { max-width:960px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:28px 0 2px; }
+.meta { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.keys { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+.keys i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.bar { display:flex; gap:1px; height:34px; }
+.bar i { flex:1; min-width:2px; border-radius:2px; cursor:help; }
+.bar i:hover { outline:2px solid var(--fg); }
+.axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:4px; }
+.OBS { background:var(--OBS); } .QUIET { background:var(--QUIET); } .DELAYED { background:var(--DELAYED); }
+.LOST { background:var(--LOST); } .SUSP { background:var(--SUSP); }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tag { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-weight:600; font-size:12px; white-space:nowrap; }
+.tag.QUIET { color:var(--fg); }
+</style></head><body><main>
+<h1>관측 공백 타임라인</h1><p class="meta">real/vm/vm.jsonl · 한 칸 = 5초 · 칸에 마우스를 올리면 근거가 보입니다</p>
+<div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
+<section><h2>gap-vm1/falco</h2>
+<p class="meta">주기 신호: falco-metrics</p>
+<div class="bar"><i class="QUIET" title="21:40:30 조용
+falco-metrics×1"></i><i class="OBS" title="21:40:35 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:40:40 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:40:45 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="21:40:50 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:40:55 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:00 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="21:41:05 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:10 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:15 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:20 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:25 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:30 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="21:41:35 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:40 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:45 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:50 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:55 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:00 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="21:42:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:10 조용
+cat×1, falco-metrics×1"></i><i class="LOST" title="21:42:15 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:20 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:25 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:30 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:35 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:40 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:42:45 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="QUIET" title="21:42:50 조용
+falco-metrics×1"></i><i class="OBS" title="21:42:55 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:00 조용
+cat×1"></i><i class="OBS" title="21:43:05 관측
+cat×2, falco-metrics×2"></i><i class="OBS" title="21:43:10 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:15 조용
+cat×1"></i><i class="OBS" title="21:43:20 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:25 관측
+cat×2, falco-metrics×2"></i><i class="QUIET" title="21:43:30 조용
+cat×1"></i><i class="OBS" title="21:43:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:40 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="21:43:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:50 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:43:55 조용
+cat×1"></i><i class="OBS" title="21:44:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:05 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:44:10 조용
+cat×1"></i><i class="OBS" title="21:44:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:20 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:44:25 조용
+cat×1"></i><i class="OBS" title="21:44:30 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:44:35 조용
+이벤트 없음"></i><i class="QUIET" title="21:44:40 조용
+falco-metrics×1"></i><i class="QUIET" title="21:44:45 조용
+falco-metrics×1"></i><i class="QUIET" title="21:44:50 조용
+falco-metrics×1"></i><i class="QUIET" title="21:44:55 조용
+falco-metrics×1"></i><i class="QUIET" title="21:45:00 조용
+falco-metrics×1"></i><i class="QUIET" title="21:45:05 조용
+falco-metrics×1"></i><i class="QUIET" title="21:45:10 조용
+falco-metrics×2"></i><i class="OBS" title="21:45:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:45:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:25 조용
+cat×1"></i><i class="OBS" title="21:45:30 관측
+falco-metrics×2, cat×2"></i><i class="OBS" title="21:45:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:45:45 관측
+cat×2"></i><i class="OBS" title="21:45:50 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:45:55 조용
+cat×1"></i><i class="OBS" title="21:46:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:46:05 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:46:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:15 관측
+cat×2"></i><i class="OBS" title="21:46:20 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:46:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:30 관측
+cat×2"></i><i class="OBS" title="21:46:35 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:46:40 조용
+cat×1"></i><i class="OBS" title="21:46:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:46:50 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:46:55 조용
+cat×1"></i><i class="OBS" title="21:47:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:05 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:47:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:47:15 관측
+cat×2"></i><i class="OBS" title="21:47:20 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:47:25 조용
+cat×1"></i><i class="OBS" title="21:47:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:35 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:47:40 조용
+cat×1"></i><i class="OBS" title="21:47:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:50 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:47:55 조용
+cat×1"></i><i class="OBS" title="21:48:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:48:05 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:48:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:48:15 관측
+cat×2"></i><i class="OBS" title="21:48:20 관측
+falco-metrics×2, cat×2"></i><i class="QUIET" title="21:48:25 조용
+cat×1"></i><i class="OBS" title="21:48:30 관측
+falco-metrics×2, cat×2"></i></div>
+<div class="axis"><span>21:40:30</span><span>21:48:35</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:30–21:40:35</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:45–21:40:50</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:00–21:41:05</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:15–21:41:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:30–21:41:35</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:45–21:41:50</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:00–21:42:05</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:10–21:42:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>21:42:15–21:42:50</td><td>수집기 재시작 (프로세스 시작 시각 변경) · 신호 공백 21:42:13.0–21:42:54.5 (41.5초)</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:50–21:42:55</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:00–21:43:05</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:15–21:43:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:30–21:43:35</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:40–21:43:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:55–21:44:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:10–21:44:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:25–21:44:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:35–21:45:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:25–21:45:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:40–21:45:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:55–21:46:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:10–21:46:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:25–21:46:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:40–21:46:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:55–21:47:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:10–21:47:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:25–21:47:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:40–21:47:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:55–21:48:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:48:10–21:48:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:48:25–21:48:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>gap-vm1/tetragon</h2>
+<p class="meta">주기 신호: tetragon-metrics</p>
+<div class="bar"><i class="QUIET" title="21:40:30 조용
+이벤트 없음
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="OBS" title="21:40:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:40 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:45 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:40:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:55 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:00 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:10 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:15 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:25 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:30 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:40 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:45 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:55 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:00 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:10 관측
+runc×3, net-interface-handler×3, cat×2, sleep×2, bash×2, iptables×2, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, docker×1, containerd-shim-runc-v2×1, bridge-network-interface×1, systemd-sysctl×1"></i><i class="OBS" title="21:42:15 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:25 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:30 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:40 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:45 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:50 관측
+cat×2, sleep×2, bash×2, containerd-shim-runc-v2×2, runc×2, iptables×2, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, docker×1, 9×1, package-data-downloader×1, 6×1, bridge-network-interface×1, net-interface-handler×1, systemd-sysctl×1, falco×1"></i><i class="OBS" title="21:42:55 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:00 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:10 관측
+iptables×7, nft×6, cat×2, sleep×2, buildkit-cni-firewall×1, ip6tables×1, buildkit-cni-bridge×1, buildkit-cni-host-local×1, buildkit-cni-loopback×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:15 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:25 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:30 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:30 관측
+runc×3, net-interface-handler×3, cat×2, sleep×2, bash×2, iptables×2, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, docker×1, containerd-shim-runc-v2×1, bridge-network-interface×1, systemd-sysctl×1"></i><i class="QUIET" title="21:44:35 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:44:40 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:44:45 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:44:50 조용
+tetragon-metrics×1"></i><i class="QUIET" title="21:44:55 조용
+tetragon-metrics×1"></i><i class="OBS" title="21:45:00 관측
+sh×1, debian-sa1×1, tetragon-metrics×1"></i><i class="QUIET" title="21:45:05 조용
+tetragon-metrics×1"></i><i class="OBS" title="21:45:10 관측
+bash×2, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, docker×1"></i><i class="OBS" title="21:45:15 관측
+containerd-shim-runc-v2×2, runc×2, iptables×2, cat×2, sleep×2, 6×1, bridge-network-interface×1, net-interface-handler×1, systemd-sysctl×1, sh×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:45 관측
+cat×2, sleep×2, bash×2, locale-check×1, locale×1, sudo×1, sh×1, pkill×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:45:50 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:45:55 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:00 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:05 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:10 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:15 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:20 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:25 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:30 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:35 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:40 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:45 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:50 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:46:55 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:00 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:05 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:10 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:15 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:20 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:25 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:30 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:35 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:40 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:45 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:50 관측
+bash×2, cat×2, sleep×2, locale-check×1, locale×1, sudo×1, docker×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:47:55 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:00 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:05 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:10 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:15 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:20 관측
+cat×2, sleep×2
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:25 관측
+cat×1, sleep×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i><i class="OBS" title="21:48:30 관측
+runc×3, cat×2, sleep×2, bash×2, locale-check×1, locale×1, sudo×1, sh×1, pkill×1, docker×1
+하트비트 수집기만 끊김 (Tetragon 이벤트는 계속 나옴)"></i></div>
+<div class="axis"><span>21:40:30</span><span>21:48:35</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:30–21:40:35</td><td>교차 확인: 같은 시각 falco도 건강하고 조용함</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:35–21:45:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:05–21:45:10</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>gap-vm2/falco</h2>
+<p class="meta">주기 신호: falco-metrics</p>
+<div class="bar"><i class="QUIET" title="21:40:30 조용
+falco-metrics×1"></i><i class="OBS" title="21:40:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:40:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:40:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:40:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:40:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:41:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:41:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:41:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:42:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:42:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:42:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:42:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:42:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:42:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:42:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:42:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:42:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:43:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:43:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:43:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:43:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:43:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:43:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:44:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:44:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:44:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:44:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:44:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:44:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:44:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:44:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:44:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:45:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:45:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:45:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:45:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:45:30 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:45:35 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:40 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:45:45 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:45:50 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:45:55 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:00 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:46:05 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:46:10 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:15 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:46:20 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:46:25 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:30 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:46:35 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:40 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:46:45 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:46:50 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:46:55 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:00 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:47:05 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:47:10 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:15 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:47:20 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:47:25 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:30 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:47:35 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:47:40 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:47:45 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:47:50 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:47:55 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:48:00 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:48:05 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:48:10 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:48:15 관측
+cat×2, falco-metrics×1"></i><i class="QUIET" title="21:48:20 조용
+cat×1, falco-metrics×1"></i><i class="OBS" title="21:48:25 관측
+cat×2, falco-metrics×1"></i><i class="OBS" title="21:48:30 관측
+cat×2, falco-metrics×1"></i></div>
+<div class="axis"><span>21:40:30</span><span>21:48:35</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:30–21:40:35</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:40–21:40:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:55–21:41:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:10–21:41:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:25–21:41:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:40–21:41:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:41:55–21:42:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:10–21:42:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:25–21:42:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:40–21:42:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:42:55–21:43:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:10–21:43:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:25–21:43:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:40–21:43:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:43:55–21:44:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:10–21:44:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:25–21:44:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:40–21:44:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:44:55–21:45:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:10–21:45:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:25–21:45:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:40–21:45:45</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:45:55–21:46:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:10–21:46:15</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:25–21:46:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:35–21:46:40</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:46:50–21:46:55</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:05–21:47:10</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:20–21:47:25</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:35–21:47:40</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:47:50–21:47:55</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:48:05–21:48:10</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:48:20–21:48:25</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>gap-vm2/tetragon</h2>
+<p class="meta">주기 신호: tetragon-metrics</p>
+<div class="bar"><i class="QUIET" title="21:40:30 조용
+이벤트 없음
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="OBS" title="21:40:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:40:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:40:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:41:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:41:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:42:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:42:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:43:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:43:20 관측
+bash×2, cat×1, sleep×1, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, 9×1, docker×1, package-data-downloader×1, runc×1"></i><i class="LOST" title="21:43:25 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:30 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:35 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:40 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:45 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:50 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:43:55 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="LOST" title="21:44:00 유실(확정)
+이벤트 없음
+수집기 재시작 (프로세스 시작 시각 변경)"></i><i class="OBS" title="21:44:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:44:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:44:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:00 관측
+cat×2, sleep×2, sh×1, debian-sa1×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:35 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:40 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:45:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:50 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:45:55 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:46:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:05 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:10 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:46:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:20 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:25 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:46:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:35 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:46:40 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:46:50 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:46:55 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:05 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:47:10 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:20 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:47:25 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:30 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:35 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:47:40 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:45 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:47:50 관측
+bash×2, locale-check×1, locale×1, sudo×1, docker×1, cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:47:55 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:48:00 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:48:05 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:48:10 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:48:15 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:48:20 관측
+cat×1, sleep×1, tetragon-metrics×1"></i><i class="OBS" title="21:48:25 관측
+cat×2, sleep×2, tetragon-metrics×1"></i><i class="OBS" title="21:48:30 관측
+runc×3, cat×2, sleep×2, bash×2, tetragon-metrics×1, locale-check×1, locale×1, sudo×1, sh×1, pkill×1, docker×1"></i></div>
+<div class="axis"><span>21:40:30</span><span>21:48:35</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>21:40:30–21:40:35</td><td>교차 확인: 같은 시각 falco도 건강하고 조용함</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>21:43:25–21:44:05</td><td>수집기 재시작 (프로세스 시작 시각 변경) · 신호 공백 21:43:23.8–21:44:08.8 (45.0초)</td><td></td></tr></table></div>
+</section>
+</main></body></html>

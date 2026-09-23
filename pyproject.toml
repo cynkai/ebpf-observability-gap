@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ebpf-observability-gap"
+version = "0.1.0"
+description = "Falco / Tetragon 로그에서 조용한 구간과 관측되지 않은 구간을 구분하는 분석기"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []  # 규칙 판정은 표준 라이브러리만 쓴다
+
+[project.optional-dependencies]
+openai = ["openai"]
+anthropic = ["anthropic"]
+dev = ["pytest"]
+
+[project.scripts]
+gapfind = "gapfind:main"
+tetragon-heartbeat = "tetragon_heartbeat:main"
+
+[tool.setuptools]
+py-modules = ["gapfind", "tetragon_heartbeat"]
