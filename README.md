@@ -33,6 +33,21 @@ python3 gapfind.py sample.jsonl --llm                          # 기본 OpenAI g
 python3 gapfind.py sample.jsonl --llm --provider anthropic     # Claude
 ```
 
+출력 예시 (`sample.jsonl`, OpenAI `gpt-5.5`). `SUSP` 구간 아래에 LLM의 판정, 확신도, 근거가 붙습니다.
+
+```
+구간 목록 (OBS 제외)
+  [QUIET] 10:02:00–10:02:30  주기 신호는 정상, 다른 활동 거의 없음
+  [QUIET] 10:02:40–10:03:20  주기 신호는 정상, 다른 활동 거의 없음
+  [LOST ] 10:05:00–10:05:50  드롭 18342건 보고됨
+  [SUSP ] 10:07:30–10:08:10  끊긴 주기 신호: healthcheck / 다른 이벤트 0건
+          └ LLM: UNOBSERVED (high) 직전/직후에는 nginx·curl·python3와 healthcheck가 정상적으로 보이는데, 해당 4개 창은 drops=0이어도 모든 이벤트가 비어 있고 healthcheck도 끊겼다. 실제 quiet라기보다 수집 공백에 가깝다.
+  [SUSP ] 10:09:00–10:09:30  끊긴 주기 신호: healthcheck / 다른 이벤트 45건
+          └ LLM: UNOBSERVED (medium) 구간 동안 nginx·curl·python3 등 다른 이벤트는 계속 보이지만 주기 신호인 healthcheck만 사라졌다. 아무 일도 없는 quiet는 아니며, healthcheck 관측이 빠진 부분 관측 실패로 판단된다.
+```
+
+두 `SUSP` 구간은 샘플에 일부러 심은 유실(전체 블랙아웃, healthcheck만 사라진 부분 유실)이라 정답은 둘 다 `UNOBSERVED`입니다. 근거 문장은 실행할 때마다 조금씩 달라집니다.
+
 ## 동작 방식
 
 1. Falco / Tetragon JSON 줄을 같은 이벤트 형태로 바꿉니다.
