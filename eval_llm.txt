@@ -21,7 +21,7 @@ falco_outage.jsonl node-b 09:18:40–09:19:10    observed   O observed   O obser
                                                └ Falco: 같은 시각 대조군 노드, 계속 정상
 tetragon.jsonl tg-node 09:20:10–09:20:20       observed   - undecided  X unobserved O observed  
                                                └ Tetragon: 막 켜졌고 워크로드 시작 전
-tetragon.jsonl tg-node 09:21:10–09:21:40       observed   - undecided  X unobserved - undecided 
+tetragon.jsonl tg-node 09:21:10–09:21:40       observed   - undecided  X unobserved X unobserved
                                                └ Tetragon: 워크로드를 멈춘 조용한 40초
 tetragon.jsonl tg-node 09:22:30–09:23:00       unobserved - undecided  O unobserved O unobserved
                                                └ Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
@@ -53,8 +53,26 @@ k8s.jsonl gap-worker/tetragon 10:10:20–10:10:25 observed   O observed   O obse
                                                └ k8s: 워크로드 삭제 후 새로 뜨기 전 약 13초의 조용한 구간
 k8s.jsonl gap-worker2/tetragon 10:10:20–10:10:25 observed   O observed   O observed   O observed  
                                                └ k8s: 워크로드 삭제 후 새로 뜨기 전 약 13초의 조용한 구간
+vm.jsonl gap-vm1/falco 21:42:15–21:42:50       unobserved O unobserved O unobserved O unobserved
+                                               └ VM(별도 커널): gap-vm1의 Falco 삭제 후 40초 뒤 다시 띄움
+vm.jsonl gap-vm1/tetragon 21:42:15–21:42:50    observed   O observed   O observed   O observed  
+                                               └ VM: 같은 시각 같은 VM의 Tetragon은 계속 정상
+vm.jsonl gap-vm2/tetragon 21:43:25–21:44:05    unobserved O unobserved O unobserved O unobserved
+                                               └ VM: gap-vm2의 Tetragon 삭제 후 40초 뒤 다시 띄움
+vm.jsonl gap-vm2/falco 21:43:25–21:44:05       observed   O observed   O observed   O observed  
+                                               └ VM: 같은 시각 같은 VM의 Falco는 계속 정상
+vm.jsonl gap-vm1/falco 21:44:40–21:45:10       observed   O observed   O observed   O observed  
+                                               └ VM: gap-vm1 워크로드 중지 (정말 조용함)
+vm.jsonl gap-vm1/tetragon 21:44:40–21:45:10    observed   O observed   O observed   O observed  
+                                               └ VM: gap-vm1 워크로드 중지 (정말 조용함)
+vm.jsonl gap-vm1/tetragon 21:46:00–21:48:30    observed   O observed   O observed   O observed  
+                                               └ VM: 하트비트 스크립트만 죽음, Tetragon은 계속 기록
+rotation.jsonl rot/tetragon 21:50:15–21:51:05  unobserved O unobserved O unobserved O unobserved
+                                               └ 회전: Tetragon은 봤지만 로그 회전(1MB, 백업 1개)으로 지워진 평소 구간
+rotation.jsonl rot/tetragon 21:51:30–21:52:05  observed   O observed   O observed   O observed  
+                                               └ 회전: 폭주 뒤 평소 구간, 로그에 남아 있음
 
 정답 수 (O 정답 / X 오답 / - 보류)
-  규칙만      21/26  (오답 0, 보류 5)
-  규칙+단순    24/26  (오답 2, 보류 0)
-  규칙+LLM   24/26  (오답 1, 보류 1)
+  규칙만      30/35  (오답 0, 보류 5)
+  규칙+단순    33/35  (오답 2, 보류 0)
+  규칙+LLM   33/35  (오답 2, 보류 0)

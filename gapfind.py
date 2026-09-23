@@ -561,6 +561,7 @@ def ask_llm(report, size, provider, model):
     asks = "\n".join(f"- segment_id={i}: {describe(s, size)[0]}" for i, s in targets)
     prompt = f"""eBPF 기반 보안 수집기(Falco/Tetragon) 로그 중 호스트 {report.host}의 {report.collector} 기록을 {size}초 창으로 요약한 타임라인이다.
 주기 신호로 쓰는 프로세스: {', '.join(report.rhythm) or '(찾지 못함)'}
+주기 신호가 수집기 자신의 하트비트가 아니라 워크로드라면, 워크로드가 멈춘 것일 수도 있다.
 
 <timeline>
 {timeline}
