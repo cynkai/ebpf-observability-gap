@@ -1,4 +1,4 @@
-LLM: openai gpt-5.5, 구간마다 1번 질문
+LLM: openai gpt-5.5, 구간마다 5번 질문
 
 구간                                             정답         규칙만          규칙+단순        규칙+LLM      
 sample.jsonl node-1 10:02:00–10:03:20          observed   O observed   O observed   O observed  
@@ -21,7 +21,7 @@ falco_outage.jsonl node-b 09:18:40–09:19:10    observed   O observed   O obser
                                                └ Falco: 같은 시각 대조군 노드, 계속 정상
 tetragon.jsonl tg-node 09:20:10–09:20:20       observed   - undecided  X unobserved O observed  
                                                └ Tetragon: 막 켜졌고 워크로드 시작 전
-tetragon.jsonl tg-node 09:21:10–09:21:40       observed   - undecided  X unobserved O observed  
+tetragon.jsonl tg-node 09:21:10–09:21:40       observed   - undecided  X unobserved - undecided 
                                                └ Tetragon: 워크로드를 멈춘 조용한 40초
 tetragon.jsonl tg-node 09:22:30–09:23:00       unobserved - undecided  O unobserved O unobserved
                                                └ Tetragon: 컨테이너 삭제 후 재시작, 그 사이 수집기 없음
@@ -57,4 +57,4 @@ k8s.jsonl gap-worker2/tetragon 10:10:20–10:10:25 observed   O observed   O obs
 정답 수 (O 정답 / X 오답 / - 보류)
   규칙만      21/26  (오답 0, 보류 5)
   규칙+단순    24/26  (오답 2, 보류 0)
-  규칙+LLM   25/26  (오답 1, 보류 0)
+  규칙+LLM   24/26  (오답 1, 보류 1)
