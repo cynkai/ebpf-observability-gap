@@ -1,0 +1,16 @@
+# 워커마다 3초마다 /etc/shadow를 읽는 워크로드 (Falco 알림 + Tetragon exec 이벤트)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: wl
+spec:
+  selector:
+    matchLabels: {app: wl}
+  template:
+    metadata:
+      labels: {app: wl}
+    spec:
+      containers:
+        - name: wl
+          image: alpine
+          command: ["sh", "-c", "while true; do cat /etc/shadow >/dev/null; sleep 3; done"]

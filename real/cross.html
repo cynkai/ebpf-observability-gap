@@ -1,0 +1,117 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>관측 공백 타임라인</title>
+<style>
+:root { --bg:#fbfaf8; --fg:#1f1e1c; --muted:#6b6862; --line:#e4e1db;
+  --OBS:#3a7d5c; --QUIET:#c9d8cf; --DELAYED:#d9a441; --LOST:#c2452d; --SUSP:#8a63c7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1b1a19; --fg:#ecebe8; --muted:#a09d97; --line:#34322f;
+  --OBS:#5fae86; --QUIET:#3d4b43; --DELAYED:#e0b25a; --LOST:#e0654b; --SUSP:#a888de; } }
+body { margin:0; padding:24px 16px; background:var(--bg); color:var(--fg);
+  font:15px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+main { max-width:960px; margin:0 auto; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:28px 0 2px; }
+.meta { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.keys { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+.keys i { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.bar { display:flex; gap:1px; height:34px; }
+.bar i { flex:1; min-width:2px; border-radius:2px; cursor:help; }
+.bar i:hover { outline:2px solid var(--fg); }
+.axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:4px; }
+.OBS { background:var(--OBS); } .QUIET { background:var(--QUIET); } .DELAYED { background:var(--DELAYED); }
+.LOST { background:var(--LOST); } .SUSP { background:var(--SUSP); }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tag { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-weight:600; font-size:12px; white-space:nowrap; }
+.tag.QUIET { color:var(--fg); }
+</style></head><body><main>
+<h1>관측 공백 타임라인</h1><p class="meta">real/cross.jsonl · 한 칸 = 10초 · 칸에 마우스를 올리면 근거가 보입니다</p>
+<div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
+<section><h2>lab/falco</h2>
+<p class="meta">주기 신호: falco-metrics</p>
+<div class="bar"><i class="QUIET" title="09:57:10 조용
+falco-metrics×1, cat×1"></i><i class="OBS" title="09:57:20 관측
+cat×3, falco-metrics×1"></i><i class="OBS" title="09:57:30 관측
+falco-metrics×3, cat×3"></i><i class="OBS" title="09:57:40 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:57:50 관측
+cat×3, falco-metrics×1"></i><i class="LOST" title="09:58:00 유실(확정)
+falco-metrics×3, cat×1
+드롭 908595건 보고됨"></i><i class="LOST" title="09:58:10 유실(확정)
+falco-metrics×2, cat×1
+드롭 1048914건 보고됨"></i><i class="LOST" title="09:58:20 유실(확정)
+falco-metrics×2
+드롭 1093566건 보고됨"></i><i class="LOST" title="09:58:30 유실(확정)
+falco-metrics×2
+드롭 1288841건 보고됨"></i><i class="LOST" title="09:58:40 유실(확정)
+cat×3, falco-metrics×1
+드롭 95480건 보고됨"></i><i class="OBS" title="09:58:50 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="09:59:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="09:59:10 관측
+cat×3, falco-metrics×2"></i><i class="QUIET" title="09:59:20 조용
+falco-metrics×2, cat×1"></i><i class="QUIET" title="09:59:30 조용
+falco-metrics×2"></i><i class="QUIET" title="09:59:40 조용
+falco-metrics×2"></i><i class="QUIET" title="09:59:50 조용
+falco-metrics×3"></i><i class="OBS" title="10:00:00 관측
+cat×3, falco-metrics×1"></i><i class="OBS" title="10:00:10 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="10:00:20 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:00:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:00:40 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="10:00:50 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:01:00 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:01:10 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="10:01:20 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:01:30 관측
+cat×3, falco-metrics×2"></i><i class="OBS" title="10:01:40 관측
+cat×4, falco-metrics×2"></i><i class="OBS" title="10:01:50 관측
+cat×3, falco-metrics×2"></i><i class="QUIET" title="10:02:00 조용
+falco-metrics×1, cat×1"></i></div>
+<div class="axis"><span>09:57:10</span><span>10:02:10</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:57:10–09:57:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:58:00–09:58:50</td><td>드롭 908595건 보고됨</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:59:20–10:00:00</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>10:02:00–10:02:10</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>lab/tetragon</h2>
+<p class="meta">주기 신호: sleep</p>
+<div class="bar"><i class="QUIET" title="09:57:10 조용
+이벤트 없음
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="LOST" title="09:57:20 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 3건 관측"></i><i class="LOST" title="09:57:30 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 3건 관측"></i><i class="LOST" title="09:57:40 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 4건 관측"></i><i class="LOST" title="09:57:50 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 3건 관측"></i><i class="SUSP" title="09:58:00 유실(추정)
+이벤트 없음"></i><i class="OBS" title="09:58:10 관측
+cat×2, sleep×2"></i><i class="OBS" title="09:58:20 관측
+cat×4, sleep×4"></i><i class="OBS" title="09:58:30 관측
+cat×3, sleep×3"></i><i class="OBS" title="09:58:40 관측
+cat×1438, true×1434, runc×13, containerd-shim-runc-v2×4, iptables×4, sleep×3"></i><i class="OBS" title="09:58:50 관측
+cat×4, sleep×4, fstrim×1"></i><i class="OBS" title="09:59:00 관측
+cat×3, sleep×3"></i><i class="OBS" title="09:59:10 관측
+cat×3, sleep×3"></i><i class="OBS" title="09:59:20 관측
+runc×3, cat×1, sleep×1, containerd-shim-runc-v2×1, iptables×1"></i><i class="QUIET" title="09:59:30 조용
+fstrim×1
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="QUIET" title="09:59:40 조용
+이벤트 없음
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="QUIET" title="09:59:50 조용
+이벤트 없음
+교차 확인: 같은 시각 falco도 건강하고 조용함"></i><i class="OBS" title="10:00:00 관측
+cat×3, sleep×3, containerd-shim-runc-v2×2, runc×2, 6×1, iptables×1, sh×1"></i><i class="OBS" title="10:00:10 관측
+cat×4, sleep×4"></i><i class="OBS" title="10:00:20 관측
+cat×3, sleep×3"></i><i class="OBS" title="10:00:30 관측
+cat×3, sleep×3"></i><i class="QUIET" title="10:00:40 조용
+cat×1, sleep×1"></i><i class="LOST" title="10:00:50 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 3건 관측"></i><i class="LOST" title="10:01:00 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 3건 관측"></i><i class="LOST" title="10:01:10 유실(확정)
+이벤트 없음
+교차 확인: 같은 시각 falco는 활동 4건 관측"></i><i class="OBS" title="10:01:20 관측
+cat×3, sleep×3, modprobe×2"></i><i class="OBS" title="10:01:30 관측
+cat×3, sleep×3"></i><i class="OBS" title="10:01:40 관측
+cat×4, sleep×4"></i><i class="OBS" title="10:01:50 관측
+cat×3, sleep×3"></i><i class="OBS" title="10:02:00 관측
+runc×3, cat×1, sleep×1"></i></div>
+<div class="axis"><span>09:57:10</span><span>10:02:10</span></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:57:10–09:57:20</td><td>교차 확인: 같은 시각 falco도 건강하고 조용함</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:57:20–09:58:00</td><td>교차 확인: 같은 시각 falco는 활동 3건 관측</td><td></td></tr><tr><td><b class="tag SUSP">유실(추정)</b></td><td>09:58:00–09:58:10</td><td>끊긴 주기 신호: sleep / 다른 이벤트 0건</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:59:30–10:00:00</td><td>교차 확인: 같은 시각 falco도 건강하고 조용함</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>10:00:40–10:00:50</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>10:00:50–10:01:20</td><td>교차 확인: 같은 시각 falco는 활동 3건 관측 · 신호 공백 10:00:40.3–10:01:22.4 (42.1초)</td><td></td></tr></table></div>
+</section>
+</main></body></html>

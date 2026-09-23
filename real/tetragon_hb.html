@@ -27,7 +27,7 @@ th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap
 </style></head><body><main>
 <h1>관측 공백 타임라인</h1><p class="meta">real/tetragon_hb.jsonl + real/tetragon_hb_heartbeat.jsonl · 한 칸 = 10초 · 칸에 마우스를 올리면 근거가 보입니다</p>
 <div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
-<section><h2>tg-node</h2>
+<section><h2>tg-node/tetragon</h2>
 <p class="meta">주기 신호: tetragon-metrics</p>
 <div class="bar"><i class="OBS" title="09:45:10 관측
 containerd-shim-runc-v2×2, runc×2, cat×2, sleep×2, 6×1, iptables×1, sh×1, tetragon-metrics×1"></i><i class="OBS" title="09:45:20 관측
@@ -68,6 +68,6 @@ cat×4, sleep×4, tetragon-metrics×2"></i><i class="OBS" title="09:49:40 관측
 cat×3, sleep×3, tetragon-metrics×2"></i><i class="OBS" title="09:49:50 관측
 tetragon-metrics×2, cat×2, sleep×2, runc×2"></i></div>
 <div class="axis"><span>09:45:10</span><span>09:50:00</span></div>
-<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:46:00–09:46:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag DELAYED">지연</b></td><td>09:47:20–09:48:00</td><td>하트비트 45초 끊김, 커널 카운터 연속 (+96건), 드롭 0</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:48:40–09:49:20</td><td>수집기 재시작 (프로세스 시작 시각 변경)</td><td></td></tr></table></div>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:46:00–09:46:30</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr><tr><td><b class="tag DELAYED">지연</b></td><td>09:47:20–09:48:00</td><td>하트비트 45초 끊김, 커널 카운터 연속 (+96건), 드롭 0 · 신호 공백 09:47:15.7–09:48:00.8 (45.0초)</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:48:40–09:49:20</td><td>수집기 재시작 (프로세스 시작 시각 변경) · 신호 공백 09:48:35.8–09:49:20.9 (45.0초)</td><td></td></tr></table></div>
 </section>
 </main></body></html>

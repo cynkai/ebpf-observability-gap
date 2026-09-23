@@ -27,7 +27,7 @@ th { color:var(--muted); font-weight:500; } td:nth-child(2) { white-space:nowrap
 </style></head><body><main>
 <h1>관측 공백 타임라인</h1><p class="meta">real/falco_outage.jsonl · 한 칸 = 10초 · 칸에 마우스를 올리면 근거가 보입니다</p>
 <div class="keys"><span><i class="OBS"></i>관측</span><span><i class="QUIET"></i>조용</span><span><i class="DELAYED"></i>지연</span><span><i class="LOST"></i>유실(확정)</span><span><i class="SUSP"></i>유실(추정)</span></div>
-<section><h2>node-a</h2>
+<section><h2>node-a/falco</h2>
 <p class="meta">주기 신호: falco-metrics</p>
 <div class="bar"><i class="OBS" title="09:16:30 관측
 falco-metrics×2, cat×2"></i><i class="OBS" title="09:16:40 관측
@@ -58,8 +58,8 @@ cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:40 관측
 cat×3, falco-metrics×2"></i><i class="OBS" title="09:19:50 관측
 cat×2, falco-metrics×1"></i></div>
 <div class="axis"><span>09:16:30</span><span>09:20:00</span></div>
-<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag DELAYED">지연</b></td><td>09:17:20–09:17:50</td><td>하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:18:40–09:19:10</td><td>수집기 재시작 (프로세스 시작 시각 변경)</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:19:10–09:19:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
-</section><section><h2>node-b</h2>
+<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr><tr><td><b class="tag DELAYED">지연</b></td><td>09:17:20–09:17:50</td><td>하트비트 44초 끊김, 커널 카운터 연속 (+897건), 드롭 0 · 신호 공백 09:17:11.3–09:17:55.4 (44.1초)</td><td></td></tr><tr><td><b class="tag LOST">유실(확정)</b></td><td>09:18:40–09:19:10</td><td>수집기 재시작 (프로세스 시작 시각 변경) · 신호 공백 09:18:35.5–09:19:16.6 (41.2초)</td><td></td></tr><tr><td><b class="tag QUIET">조용</b></td><td>09:19:10–09:19:20</td><td>주기 신호는 정상, 다른 활동 거의 없음</td><td></td></tr></table></div>
+</section><section><h2>node-b/falco</h2>
 <p class="meta">주기 신호: falco-metrics</p>
 <div class="bar"><i class="OBS" title="09:16:30 관측
 falco-metrics×2, cat×2"></i><i class="OBS" title="09:16:40 관측

@@ -14,6 +14,8 @@
   python3 gapfind.py sample.jsonl --html report.html # HTML 타임라인
   python3 gapfind.py falco.jsonl --follow            # 실시간 감시 (tail -f 처럼)
   python3 gapfind.py tetragon.jsonl heartbeat.jsonl  # 여러 파일을 합쳐서 (Tetragon + 하트비트)
+  python3 gapfind.py falco.jsonl tetragon.jsonl      # 같은 호스트의 두 수집기를 서로 교차 확인
+  python3 gapfind.py sample.jsonl --llm --votes 5    # 5번 물어 답이 갈리면 판단 보류
 """
 import argparse
 import html
@@ -41,6 +43,7 @@ class Event:
     proc: str           # 빈 문자열이면 활동이 아니라 드롭 알림일 뿐
     drops: int = 0      # 0보다 크면 드롭 신호
     meta: dict = None   # 하트비트의 카운터 (start_ts, n_evts, 있으면 lost)
+    collector: str = "" # falco / tetragon. 같은 호스트의 수집기를 서로 교차 확인할 때 쓴다
 
 
 def parse_ts(s):
@@ -95,14 +98,16 @@ def load_one(path):
     events = []
     with open(path) as f:
         for line in f:
-            line = line.strip()
+            line = line.replace("\0", "").strip()  # 로그를 비운 뒤 이어 쓰면 앞이 NUL로 채워질 수 있다
             if not line:
                 continue
             try:
-                ev = parse_line(json.loads(line))
+                d = json.loads(line)
+                ev = parse_line(d)
             except (json.JSONDecodeError, KeyError):
                 continue  # --follow 중에 반쯤 쓰인 줄이 올 수 있다
             if ev:
+                ev.collector = "falco" if "rule" in d else "tetragon"
                 events.append(ev)
     return events
 
@@ -117,14 +122,21 @@ class Window:
     state: str = ""
     missing: list = field(default_factory=list)
     reason: str = ""
+    quiet: bool = False  # 주기 신호를 빼면 활동이 평소의 10% 이하
 
 
 @dataclass
 class HostReport:
     host: str
+    collector: str
     wins: list
     rhythm: list
+    events: list
     segs: list = field(default_factory=list)
+
+    @property
+    def key(self):
+        return f"{self.host}/{self.collector}"
 
 
 def build_windows(events, size, t0, t1):
@@ -173,11 +185,12 @@ def classify(wins, rhythm):
     quiet_limit = max(1, busy[len(busy) // 2] * 0.1)
     for w in wins:
         w.missing = [p for p in rhythm if p not in w.procs]
+        w.quiet = others(w) <= quiet_limit
         if w.drops:
             w.state, w.reason = "LOST", f"드롭 {w.drops}건 보고됨"
         elif w.missing or (not rhythm and not w.procs):
             w.state = "SUSP"
-        elif others(w) <= quiet_limit:
+        elif w.quiet:
             w.state = "QUIET"
         else:
             w.state = "OBS"
@@ -191,7 +204,7 @@ def classify(wins, rhythm):
                 j -= 1
 
 
-def explain_heartbeat_gaps(wins, events):
+def explain_heartbeat_gaps(wins, events, size):
     """수집기 하트비트가 끊긴 구간을 앞뒤 스냅숏의 카운터로 확정한다.
 
     - start_ts가 바뀌거나 커널 카운터가 줄었다: 수집기가 재시작됨 -> 그 사이는 LOST
@@ -203,6 +216,13 @@ def explain_heartbeat_gaps(wins, events):
     gaps = sorted(b.ts - a.ts for a, b in zip(beats, beats[1:]))
     normal = gaps[len(gaps) // 2]
     for a, b in zip(beats, beats[1:]):
+        if b.ts - a.ts <= 1.5 * normal:
+            # 하트비트 간격의 작은 흔들림(5.0초 -> 5.1초)이 창 경계에 걸려 생긴 SUSP는 되돌린다
+            for w in wins:
+                if w.state == "SUSP" and a.ts < w.start and w.start + size <= b.ts \
+                        and set(w.missing) <= set(HEARTBEATS):
+                    w.state = "QUIET" if w.quiet else "OBS"
+            continue
         if b.ts - a.ts <= 2 * normal:
             continue
         restarted = a.meta["start_ts"] != b.meta["start_ts"] or b.meta["n_evts"] < a.meta["n_evts"]
@@ -241,22 +261,66 @@ def segments(wins):
     return segs
 
 
+def cross_check(reports):
+    """같은 호스트의 다른 수집기를 증인으로 써서 SUSP 창을 가린다.
+
+    모든 보고서는 같은 시간축이라 창 번호가 같으면 같은 시각이다.
+    - 증인이 그 시각 건강하게 활동을 봤다(OBS): 뭔가 일어났는데 이 수집기는 못 봤다 -> LOST
+    - 증인이 그 시각 건강하게 조용했다(QUIET): 정말 조용했다 -> QUIET
+    - 증인도 SUSP/LOST면 도움이 안 된다
+    """
+    for r in reports:
+        peers = [p for p in reports if p.host == r.host and p is not r]
+        for i, w in enumerate(r.wins):
+            if w.state != "SUSP":
+                continue
+            for p in peers:
+                pw = p.wins[i]
+                n = sum(c for proc, c in pw.procs.items() if proc not in p.rhythm)
+                if pw.state == "OBS":
+                    w.state, w.reason = "LOST", f"교차 확인: 같은 시각 {p.collector}는 활동 {n}건 관측"
+                    break
+                if pw.state == "QUIET":
+                    w.state, w.reason = "QUIET", f"교차 확인: 같은 시각 {p.collector}도 건강하고 조용함"
+                    break
+
+
+def exact_gaps(report, size):
+    """공백 구간의 정확한 경계: 구간 앞 마지막 주기 신호 ~ 구간 뒤 첫 주기 신호."""
+    ts = [e.ts for e in report.events if e.proc in report.rhythm]
+    for s in report.segs:
+        s["exact"] = None
+        if s["state"] not in ("SUSP", "LOST", "DELAYED") or not ts:
+            continue
+        lo, hi = s["wins"][0].start, s["wins"][-1].start + size
+        if any(lo <= t < hi for t in ts):
+            continue  # 구간 안에도 신호가 있다 (예: 하트비트는 살아 있고 드롭만 보고됨)
+        before = [t for t in ts if t < lo]
+        after = [t for t in ts if t >= hi]
+        if before and after:
+            s["exact"] = (before[-1], after[0])
+
+
 def analyze(events, size, ratio):
-    """호스트별로 나눠 분석한다. 모든 호스트가 같은 시간축을 쓰게 t0/t1을 맞춘다."""
+    """호스트·수집기별로 나눠 분석한다. 모두 같은 시간축을 쓰게 t0/t1을 맞춘다."""
     t0 = events[0].ts - events[0].ts % size
     t1 = events[-1].ts
-    by_host = {}
+    groups = {}
     for ev in events:
-        by_host.setdefault(ev.host, []).append(ev)
+        groups.setdefault((ev.host, ev.collector), []).append(ev)
     reports = []
-    for host in sorted(by_host):
-        evs = by_host[host]
+    for (host, collector) in sorted(groups):
+        evs = groups[(host, collector)]
         count_heartbeat_drops(evs)
         rhythm = find_rhythm(evs, size, ratio)
         wins = build_windows(evs, size, t0, t1)
         classify(wins, rhythm)
-        explain_heartbeat_gaps(wins, evs)
-        reports.append(HostReport(host, wins, rhythm, segments(wins)))
+        explain_heartbeat_gaps(wins, evs, size)
+        reports.append(HostReport(host, collector, wins, rhythm, evs))
+    cross_check(reports)
+    for r in reports:
+        r.segs = segments(r.wins)
+        exact_gaps(r, size)
     return reports
 
 
@@ -264,6 +328,10 @@ def analyze(events, size, ratio):
 
 def hms(ts):
     return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M:%S")
+
+
+def hms1(ts):
+    return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M:%S.%f")[:10]
 
 
 def legend():
@@ -282,17 +350,22 @@ def describe(seg, size):
     if seg["state"] == "SUSP":
         missing = sorted({p for w in ws for p in w.missing})
         total = sum(sum(w.procs.values()) for w in ws)
-        return span, f"끊긴 주기 신호: {', '.join(missing) or '없음'} / 다른 이벤트 {total}건"
-    if seg["state"] == "QUIET":
-        return span, "주기 신호는 정상, 다른 활동 거의 없음"
-    return span, ws[0].reason
+        note = f"끊긴 주기 신호: {', '.join(missing) or '없음'} / 다른 이벤트 {total}건"
+    elif seg["state"] == "QUIET":
+        note = ws[0].reason or "주기 신호는 정상, 다른 활동 거의 없음"
+    else:
+        note = ws[0].reason
+    if seg.get("exact"):
+        a, b = seg["exact"]
+        note += f" · 신호 공백 {hms1(a)}–{hms1(b)} ({b - a:.1f}초)"
+    return span, note
 
 
 def print_report(reports, size, verdicts):
     print(f"타임라인 (한 칸 = {size}초)   {legend()}")
     for r in reports:
         n = sum(sum(w.procs.values()) for w in r.wins)
-        print(f"\n[{r.host}] 이벤트 {n}개, 주기 신호: "
+        print(f"\n[{r.key}] 이벤트 {n}개, 주기 신호: "
               f"{', '.join(r.rhythm) if r.rhythm else '없음 (조용함과 유실을 구분하기 어려움)'}")
         print_timeline(r.wins, size)
         for i, s in enumerate(r.segs):
@@ -300,7 +373,7 @@ def print_report(reports, size, verdicts):
                 continue
             span, note = describe(s, size)
             print(f"  [{s['state']:7}] {span}  {note}")
-            v = verdicts.get((r.host, i))
+            v = verdicts.get((r.key, i))
             if v:
                 print(f"            └ LLM: {v['verdict']} ({v['confidence']}) {v['reason']}")
 
@@ -315,7 +388,7 @@ def render_html(reports, size, verdicts, path, title):
                 seg_of[id(w)] = i
         cells = []
         for w in r.wins:
-            v = verdicts.get((r.host, seg_of[id(w)]))
+            v = verdicts.get((r.key, seg_of[id(w)]))
             tip = [f"{hms(w.start)} {LABEL[w.state]}",
                    ", ".join(f"{p}×{c}" for p, c in w.procs.most_common()) or "이벤트 없음"]
             if w.reason:
@@ -328,13 +401,13 @@ def render_html(reports, size, verdicts, path, title):
             if s["state"] == "OBS":
                 continue
             span, note = describe(s, size)
-            v = verdicts.get((r.host, i))
+            v = verdicts.get((r.key, i))
             llm = f"{v['verdict']} ({v['confidence']}) {html.escape(v['reason'])}" if v else ""
             segs.append(f'<tr><td><b class="tag {s["state"]}">{LABEL[s["state"]]}</b></td>'
                         f"<td>{span}</td><td>{html.escape(note)}</td><td>{llm}</td></tr>")
         table = (f'<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr>'
                  f'{"".join(segs)}</table></div>' if segs else '<p class="meta">전 구간 관측됨</p>')
-        rows.append(f"""<section><h2>{html.escape(r.host)}</h2>
+        rows.append(f"""<section><h2>{html.escape(r.key)}</h2>
 <p class="meta">주기 신호: {html.escape(', '.join(r.rhythm) or '없음')}</p>
 <div class="bar">{''.join(cells)}</div>
 <div class="axis"><span>{hms(r.wins[0].start)}</span><span>{hms(r.wins[-1].start + size)}</span></div>
@@ -402,14 +475,14 @@ VERDICT_SCHEMA = {
 
 
 def ask_llm(report, size, provider, model):
-    """한 호스트의 SUSP 구간을 한 번에 묻는다. 반환: {(host, segment_id): verdict}"""
+    """한 호스트·수집기의 SUSP 구간을 한 번에 묻는다. 반환: {(key, segment_id): verdict}"""
     targets = [(i, s) for i, s in enumerate(report.segs) if s["state"] == "SUSP"]
     if not targets:
         return {}
     # 로그 전체가 아니라 '창 요약' 전체를 보낸다. 요약이 작아서 긴 맥락을 통째로 볼 수 있다.
     timeline = "\n".join(window_line(w) for w in report.wins)
     asks = "\n".join(f"- segment_id={i}: {describe(s, size)[0]}" for i, s in targets)
-    prompt = f"""eBPF 기반 보안 수집기(Falco/Tetragon) 로그 중 호스트 {report.host}의 기록을 {size}초 창으로 요약한 타임라인이다.
+    prompt = f"""eBPF 기반 보안 수집기(Falco/Tetragon) 로그 중 호스트 {report.host}의 {report.collector} 기록을 {size}초 창으로 요약한 타임라인이다.
 주기 신호로 쓰는 프로세스: {', '.join(report.rhythm) or '(찾지 못함)'}
 주기 신호가 수집기 자신의 하트비트가 아니라 워크로드라면, 워크로드가 멈춘 것일 수도 있다.
 
@@ -424,9 +497,31 @@ def ask_llm(report, size, provider, model):
     call = call_openai if provider == "openai" else call_anthropic
     text = call(prompt, VERDICT_SCHEMA, model)
     if text is None:
-        print(f"  ({report.host}: LLM이 요청을 거절했습니다)")
+        print(f"  ({report.key}: LLM이 요청을 거절했습니다)")
         return {}
-    return {(report.host, it["segment_id"]): it for it in json.loads(text)["items"]}
+    return {(report.key, it["segment_id"]): it for it in json.loads(text)["items"]}
+
+
+def ask_llm_votes(report, size, provider, model, n, agree=0.8):
+    """같은 질문을 n번 해서, agree 비율 이상 같은 답일 때만 판정으로 쓴다.
+
+    한 번만 물으면 LLM은 가를 근거가 없는 구간에서도 한쪽을 골라 버린다.
+    답이 갈리면 UNSURE(판단 보류)로 남긴다.
+    """
+    runs = [ask_llm(report, size, provider, model) for _ in range(n)]
+    out = {}
+    for k in {k for r in runs for k in r}:
+        votes = Counter(r[k]["verdict"] for r in runs if k in r)
+        top, cnt = votes.most_common(1)[0]
+        if n == 1 or cnt / n >= agree:
+            first = next(r[k] for r in runs if k in r and r[k]["verdict"] == top)
+            conf = first["confidence"] if n == 1 else f"{cnt}/{n} 일치"
+            out[k] = {**first, "confidence": conf}
+        else:
+            tally = ", ".join(f"{v} {c}회" for v, c in votes.most_common())
+            out[k] = {"segment_id": k[1], "verdict": "UNSURE", "confidence": f"{cnt}/{n}",
+                      "reason": f"실행마다 답이 갈려 판단 보류 ({tally})"}
+    return out
 
 
 def call_openai(prompt, schema, model):
@@ -475,13 +570,13 @@ def follow(path, size, ratio, every):
                     if s["state"] not in ("LOST", "SUSP", "DELAYED"):
                         continue
                     ongoing = i == len(r.segs) - 1
-                    key = (r.host, s["wins"][0].start, s["state"], ongoing)
+                    key = (r.key, s["wins"][0].start, s["state"], ongoing)
                     if key in seen:
                         continue
                     seen.add(key)
                     span, note = describe(s, size)
                     tag = "진행 중" if ongoing else "종료"
-                    print(f"{hms(time.time())} [{r.host}] {LABEL[s['state']]} {span} ({tag}) {note}", flush=True)
+                    print(f"{hms(time.time())} [{r.key}] {LABEL[s['state']]} {span} ({tag}) {note}", flush=True)
         time.sleep(every)
 
 
@@ -496,6 +591,7 @@ def main():
     ap.add_argument("--llm", action="store_true", help="SUSP 구간을 LLM에게 판단시킴")
     ap.add_argument("--provider", choices=["openai", "anthropic"], default="openai")
     ap.add_argument("--model", help="기본: openai=gpt-5.5, anthropic=claude-opus-5")
+    ap.add_argument("--votes", type=int, default=1, help="같은 질문을 N번 해서 답이 갈리면 보류 (기본 1)")
     ap.add_argument("--html", metavar="PATH", help="HTML 타임라인을 이 경로에 저장")
     ap.add_argument("--follow", nargs="?", const=5, type=int, metavar="SEC",
                     help="파일을 계속 감시하며 새 공백을 알림 (기본 5초마다)")
@@ -516,7 +612,7 @@ def main():
     if args.llm:
         model = args.model or DEFAULT_MODEL[args.provider]
         for r in reports:
-            verdicts.update(ask_llm(r, args.window, args.provider, model))
+            verdicts.update(ask_llm_votes(r, args.window, args.provider, model, args.votes))
 
     print_report(reports, args.window, verdicts)
     if args.html:

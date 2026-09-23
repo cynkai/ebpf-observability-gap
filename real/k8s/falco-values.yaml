@@ -1,0 +1,23 @@
+# falcosecurity/falco 차트: modern_ebpf + JSON 파일 출력 + 5초 metrics 하트비트
+driver:
+  kind: modern_ebpf
+falco:
+  json_output: true
+  json_include_output_property: false
+  file_output:
+    enabled: true
+    keep_alive: false
+    filename: /gaplogs/falco.jsonl
+  metrics:
+    enabled: true
+    interval: 5s
+    output_rule: true
+mounts:
+  volumes:
+    - name: gaplogs
+      hostPath:
+        path: /gaplogs
+        type: DirectoryOrCreate
+  volumeMounts:
+    - name: gaplogs
+      mountPath: /gaplogs

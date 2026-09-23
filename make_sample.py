@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""테스트용 Falco + Tetragon JSON 로그를 만든다 (10분 분량).
+"""테스트용 Tetragon JSON 로그를 만든다 (10분 분량, 호스트 node-1 하나).
 
 심어 둔 구간:
   120~200초  조용함     : 업무 이벤트 없음, healthcheck만 계속 나옴
-  300~340초  확정 유실  : 이벤트 없음 + 340초에 Falco 드롭 알림
+  300~340초  확정 유실  : 이벤트 없음 + 340초에 Tetragon rate_limit_info (버린 이벤트 수)
   450~490초  은밀한 유실: 이벤트 없음, 드롭 신호도 없음
   540~570초  부분 유실  : 업무 이벤트는 있는데 healthcheck만 사라짐
 """
@@ -26,10 +26,9 @@ def tetragon_exec(sec, binary):
             "node_name": "node-1", "time": iso(sec)}
 
 
-def falco_alert(sec, rule, proc, extra=None):
-    fields = {"proc.name": proc, **(extra or {})}
-    return {"hostname": "node-1", "priority": "Notice", "rule": rule,
-            "source": "syscall", "time": iso(sec), "output_fields": fields}
+def tetragon_drop(sec, n):
+    return {"rate_limit_info": {"number_of_dropped_process_events": str(n)},
+            "node_name": "node-1", "time": iso(sec)}
 
 
 def in_range(s, a, b):
@@ -53,12 +52,9 @@ for sec in range(DURATION):
             events.append(tetragon_exec(sec + random.random(),
                                         random.choice(["/usr/sbin/nginx", "/usr/bin/curl",
                                                        "/usr/bin/python3"])))
-    if random.random() < 0.02:
-        events.append(falco_alert(sec + 0.5, "Terminal shell in container", "bash"))
 
-# 확정 유실: Falco는 드롭이 끝난 뒤 알림을 한 번 보낸다
-events.append(falco_alert(340.0, "Falco internal: syscall event drop", "falco",
-                          {"n_drops": 18342, "n_drops_buffer": 18342}))
+# 확정 유실: 드롭은 끝난 뒤 한 번에 보고된다
+events.append(tetragon_drop(340.0, 18342))
 
 events.sort(key=lambda e: e["time"])
 with open("sample.jsonl", "w") as f:

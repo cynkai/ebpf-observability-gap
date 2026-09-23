@@ -1,0 +1,14 @@
+# kind 클러스터: 워커 2대. 각 워커의 /gaplogs를 Mac 폴더에 붙여서
+# Falco/Tetragon 파드가 재시작돼도 로그가 이어서 남게 한다.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+    extraMounts:
+      - hostPath: ./logs/gap-worker
+        containerPath: /gaplogs
+  - role: worker
+    extraMounts:
+      - hostPath: ./logs/gap-worker2
+        containerPath: /gaplogs
