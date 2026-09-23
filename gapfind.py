@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 
 SYMBOL = {"OBS": "█", "QUIET": "·", "LOST": "X", "SUSP": "?"}
 FALCO_DROP_RULE = "Falco internal: syscall event drop"
+FALCO_METRICS_RULE = "Falco internal: metrics snapshot"  # metrics.output_rule=true 일 때
 
 
 # ---------- 1. 파싱: Falco / Tetragon 줄을 같은 모양으로 ----------
@@ -28,7 +29,7 @@ FALCO_DROP_RULE = "Falco internal: syscall event drop"
 @dataclass
 class Event:
     ts: float
-    proc: str
+    proc: str           # 빈 문자열이면 활동이 아니라 드롭 알림일 뿐
     drops: int = 0      # 0보다 크면 드롭 신호
     source: str = ""
 
@@ -46,11 +47,15 @@ def parse_line(d):
     if "rule" in d:  # Falco
         fields = d.get("output_fields", {})
         if d["rule"].startswith(FALCO_DROP_RULE):
-            return Event(ts, "falco", int(fields.get("n_drops", 1)), "falco")
+            return Event(ts, "", int(fields.get("n_drops", 1)), "falco")
+        if d["rule"] == FALCO_METRICS_RULE:
+            # 주기적으로 나오므로 주기 신호가 되고, 직전 스냅숏 이후 드롭 수도 알려준다
+            n = int(fields.get("scap.n_drops", 0)) - int(fields.get("scap.n_drops_prev", 0))
+            return Event(ts, "falco-metrics", max(n, 0), "falco")
         return Event(ts, fields.get("proc.name", "?"), 0, "falco")
     if "rate_limit_info" in d:  # Tetragon 내보내기 단계에서 버린 이벤트
         n = int(d["rate_limit_info"].get("number_of_dropped_process_events", 1))
-        return Event(ts, "tetragon", n, "tetragon")
+        return Event(ts, "", n, "tetragon")
     for key, body in d.items():  # process_exec, process_kprobe, ...
         if key.startswith("process_") and isinstance(body, dict):
             binary = body.get("process", {}).get("binary", "?")
@@ -88,9 +93,8 @@ def build_windows(events, size):
     wins = [Window(t0 + i * size) for i in range(n)]
     for ev in events:
         w = wins[int((ev.ts - t0) // size)]
-        if ev.drops:
-            w.drops += ev.drops
-        else:
+        w.drops += ev.drops
+        if ev.proc:
             w.procs[ev.proc] += 1
     return wins
 
@@ -103,8 +107,12 @@ def find_rhythm(events, size, ratio):
     """
     times = {}
     for ev in events:
-        if not ev.drops:
+        if ev.proc:
             times.setdefault(ev.proc, []).append(ev.ts)
+    # 수집기가 직접 내는 하트비트가 있으면 그것만 쓴다.
+    # 일정하게 도는 워크로드(cron 등)는 멈추는 게 정상일 수 있어서 기준으로 삼으면 안 된다.
+    if "falco-metrics" in times:
+        return ["falco-metrics"]
     rhythm = []
     for proc, ts in times.items():
         gaps = sorted(b - a for a, b in zip(ts, ts[1:]))
