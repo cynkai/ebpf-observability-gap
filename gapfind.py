@@ -18,6 +18,8 @@
   python3 gapfind.py falco.jsonl tetragon.jsonl      # 같은 호스트의 두 수집기를 서로 교차 확인
   python3 gapfind.py sample.jsonl --llm --votes 5    # 5번 물어 답이 갈리면 판단 보류
 """
+__version__ = "1.0.0"
+
 import argparse
 import html
 import threading
@@ -479,7 +481,7 @@ def render_html(reports, size, verdicts, path, title):
                 continue
             span, note = describe(s, size)
             v = verdicts.get((r.key, i))
-            llm = f"{v['verdict']} ({v['confidence']}) {html.escape(v['reason'])}" if v else ""
+            llm = (html.escape(f"{v['verdict']} ({v['confidence']}) {v['reason']}") if v else "")
             segs.append(f'<tr><td><b class="tag {s["state"]}">{LABEL[s["state"]]}</b></td>'
                         f"<td>{span}</td><td>{html.escape(note)}</td><td>{llm}</td></tr>")
         table = (f'<div class="scroll"><table><tr><th>상태</th><th>구간</th><th>근거</th><th>LLM</th></tr>'
@@ -662,7 +664,7 @@ def prometheus_text(reports, size):
     return "\n".join(lines) + "\n"
 
 
-def serve_metrics(port, latest):
+def serve_metrics(port, latest, host="127.0.0.1"):
     """latest["text"]를 /metrics로 내보내는 작은 HTTP 서버를 백그라운드로 띄운다."""
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -675,16 +677,17 @@ def serve_metrics(port, latest):
 
         def log_message(self, *a):
             pass
-    server = HTTPServer(("0.0.0.0", port), Handler)
+    server = HTTPServer((host, port), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
 
 
-def follow(path, size, ratio, every, webhook=None, metrics_port=None):
+def follow(path, size, ratio, every, webhook=None, metrics_port=None, metrics_host="127.0.0.1"):
     """파일을 주기적으로 다시 읽어, 새로 생긴 공백 구간을 한 번씩만 알린다."""
     seen = set()
     latest = {"text": ""}
     if metrics_port:
-        serve_metrics(metrics_port, latest)
+        serve_metrics(metrics_port, latest, metrics_host)
     print(f"{' + '.join(path)} 감시 중 ({every}초마다 확인, Ctrl-C로 종료)", flush=True)
     while True:
         events = load(path)
@@ -728,11 +731,15 @@ def main():
                     help="파일을 계속 감시하며 새 공백을 알림 (기본 5초마다)")
     ap.add_argument("--webhook", metavar="URL", help="--follow에서 새 공백을 이 URL로 POST (Slack 웹훅 호환)")
     ap.add_argument("--metrics-port", type=int, metavar="PORT", help="--follow에서 /metrics를 이 포트로 노출")
+    ap.add_argument("--metrics-host", default="127.0.0.1", metavar="ADDR",
+                    help="/metrics를 열 주소, 기본 127.0.0.1 (다른 호스트의 Prometheus가 긁어 가려면 0.0.0.0)")
+    ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = ap.parse_args()
 
     if args.follow:
         try:
-            follow(args.log, args.window, args.rhythm_ratio, args.follow, args.webhook, args.metrics_port)
+            follow(args.log, args.window, args.rhythm_ratio, args.follow, args.webhook,
+                   args.metrics_port, args.metrics_host)
         except KeyboardInterrupt:
             return
 

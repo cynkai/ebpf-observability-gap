@@ -81,7 +81,7 @@ live.jsonl 감시 중 (1초마다 확인, Ctrl-C로 종료)
  "state": "LOST", "span": "09:18:40–09:19:10", "ongoing": false, "reason": "수집기 재시작 ..."}
 ```
 
-`--metrics-port 9109`는 `/metrics`로 호스트·수집기·상태별 누적 시간과 지금 공백 중인지를 내보냅니다.
+`--metrics-port 9109`는 `/metrics`로 호스트·수집기·상태별 누적 시간과 지금 공백 중인지를 내보냅니다. 기본으로는 이 컴퓨터(`127.0.0.1`)에서만 열립니다. 다른 호스트의 Prometheus가 긁어 가야 하면 `--metrics-host 0.0.0.0`을 함께 줍니다.
 
 ```
 gapfind_gap_seconds_total{host="node-a",collector="falco",state="LOST"} 30

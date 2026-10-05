@@ -1,12 +1,13 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ebpf-observability-gap"
-version = "0.1.0"
+version = "1.0.0"
 description = "Falco / Tetragon 로그에서 조용한 구간과 관측되지 않은 구간을 구분하는 분석기"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = []  # 규칙 판정은 표준 라이브러리만 쓴다
 
