@@ -1,0 +1,2 @@
+# Experiment timelines rendered by gapfind --html; keep them out of the language stats
+real/**/*.html linguist-generated=true
