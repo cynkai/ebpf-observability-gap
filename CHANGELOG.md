@@ -16,7 +16,7 @@
 
 ### Changed
 - `--follow --metrics-port`의 `/metrics`가 `0.0.0.0` 대신 기본 `127.0.0.1`에서 열립니다. 다른 호스트의 Prometheus가 긁어 가야 하면 `--metrics-host 0.0.0.0`.
-- CI: `actions/checkout` v5, `setup-python` v6 (Node 20 런타임 폐기 경고).
+- CI: `actions/checkout` v5, `setup-python` v6 (Node 20 런타임 폐기 경고), main push와 PR에서만 실행 (PR마다 두 번 돌던 것).
 
 ### Fixed
 - HTML 리포트에서 LLM 판정·신뢰도가 이스케이프되지 않던 부분.
