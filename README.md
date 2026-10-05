@@ -1,6 +1,12 @@
 # ebpf-observability-gap
 
+[![test](https://github.com/cynkai/ebpf-observability-gap/actions/workflows/test.yml/badge.svg)](https://github.com/cynkai/ebpf-observability-gap/actions/workflows/test.yml)
+![dependencies: stdlib only](https://img.shields.io/badge/dependencies-stdlib_only-brightgreen)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **보안 로그가 비어 있을 때, 정말 아무 일도 없었던 걸까요, 아니면 수집기가 못 본 걸까요?**
+
+> **English summary.** When an eBPF security collector (Falco, Tetragon) logs nothing for five minutes, was the host quiet, or was the collector blind — crashed, dropping events from its ring buffer, or losing them to log rotation? `gapfind` labels every time window as observed, quiet, delayed, lost (proven) or suspected, using evidence the collectors can give about themselves: drop counters, heartbeats (process start time + kernel event counter), stored-vs-emitted counts, and cross-checks between two collectors on the same host. On 35 hand-labelled gaps the rules made no wrong call (30 right, 5 deferred), and 96 randomly injected faults were all classified correctly. Asking an LLM to judge the evidence-free gaps was not reliable — more evidence helped, smarter guessing didn't. Python stdlib only; `pip install .` gives `gapfind` and `tetragon-heartbeat`. Experiments ran on one Mac (Docker, kind, lima VMs); see [Limits](#한계).
 
 Falco / Tetragon 로그에서 "조용했던 구간"과 "관측되지 않은 구간"을 구분하는 분석기와, 그걸 확인한 실험 기록입니다.
 
@@ -164,6 +170,10 @@ tetragon-heartbeat --node <node_name> --out heartbeat.jsonl
 - 교차 확인은 두 수집기가 같은 종류의 활동을 본다고 가정합니다.
 - 하트비트도 교차 확인도 없는 로그에서는 여전히 "모르겠다"가 최선의 답입니다.
 
+## 버전
+
+[CHANGELOG](CHANGELOG.md) · [Releases](https://github.com/cynkai/ebpf-observability-gap/releases). `gapfind --version`으로 설치된 버전을 확인할 수 있습니다.
+
 ## 저장소 구성
 
 ```
@@ -175,3 +185,7 @@ real/                   실험 스크립트와 원본 로그 (Falco, Tetragon, k
 docs/experiments.md     실험별 상세 기록과 LLM 실험
 docs/reference.md       설치, 모든 옵션, 동작 방식, 알림 형식
 ```
+
+## License
+
+[MIT](LICENSE)

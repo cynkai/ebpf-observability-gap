@@ -169,3 +169,34 @@ def test_eval_rules_never_wrong():
     _, score = ev.run(cases)
     assert score["규칙만"]["wrong"] == 0
     assert score["규칙만"]["correct"] >= 10
+
+
+# ---------- 공개 표면 (v1.0.0) ----------
+
+def test_metrics_server_binds_loopback_by_default():
+    latest = {"text": "gapfind_gap_active 0\n"}
+    server = g.serve_metrics(0, latest)
+    try:
+        assert server.server_address[0] == "127.0.0.1"
+        import urllib.request
+        body = urllib.request.urlopen(f"http://127.0.0.1:{server.server_address[1]}/metrics", timeout=5).read()
+        assert body == b"gapfind_gap_active 0\n"
+    finally:
+        server.shutdown()
+
+
+def test_html_escapes_llm_verdict(tmp_path):
+    events = g.load(["sample.jsonl"])
+    reports = g.analyze(events, 10, 0.7)
+    key, i = next((r.key, i) for r in reports for i, s in enumerate(r.segs) if s["state"] == "SUSP")
+    verdicts = {(key, i): {"verdict": "<b>QUIET</b>", "confidence": "high", "reason": "<script>x</script>"}}
+    out = tmp_path / "r.html"
+    g.render_html(reports, 10, verdicts, str(out), "t")
+    text = out.read_text(encoding="utf-8")
+    assert "<script>x</script>" not in text and "<b>QUIET</b>" not in text
+    assert "&lt;b&gt;QUIET&lt;/b&gt;" in text
+
+
+def test_version_matches_pyproject():
+    with open("pyproject.toml", encoding="utf-8") as f:
+        assert f'version = "{g.__version__}"' in f.read()

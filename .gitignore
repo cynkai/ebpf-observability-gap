@@ -4,3 +4,5 @@ __pycache__/
 real/k8s/logs/
 real/.cross_*
 real/vm/logs/
+build/
+*.egg-info/
